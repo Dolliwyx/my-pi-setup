@@ -68,30 +68,24 @@ function applyPatch(): string | undefined {
 function renderCodeBlockWithoutFences(
   this: MarkdownInternals,
   token: MarkdownCodeToken,
-  width: number,
+  _width: number,
   nextTokenType?: string,
 ): string[] {
   const theme = this.theme;
   if (!theme) return [];
 
-  const border = theme.codeBlockBorder ?? ((text: string) => text);
   const code = theme.codeBlock ?? ((text: string) => text);
-  const indent = theme.codeBlockIndent ?? "  ";
   const text = token.text ?? "";
   const lang = typeof token.lang === "string" && token.lang.length > 0 ? token.lang : undefined;
 
-  const borderWidth = Math.max(1, Math.min(width, 80));
-  const lines: string[] = [border("─".repeat(borderWidth))];
-
+  const lines: string[] = [];
   const codeLines = theme.highlightCode
     ? theme.highlightCode(text, lang)
     : text.split("\n").map((line) => code(line));
 
   for (const line of codeLines) {
-    lines.push(`${border("│")} ${indent}${line}`);
+    lines.push(line);
   }
-
-  lines.push(border("─".repeat(borderWidth)));
 
   if (nextTokenType && nextTokenType !== "space") {
     lines.push("");
