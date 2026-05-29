@@ -13,6 +13,21 @@ interface BalanceResponse {
   error?: { message?: string };
 }
 
+interface RightFooterState {
+  statuses: Map<string, string>;
+  requestRender?: () => void;
+}
+
+declare global {
+  // Shared with codex-quota.ts so right-side footer statuses can coexist.
+  var __piRightFooterState: RightFooterState | undefined;
+}
+
+function getRightFooterState(): RightFooterState {
+  globalThis.__piRightFooterState ??= { statuses: new Map() };
+  return globalThis.__piRightFooterState;
+}
+
 async function fetchBalance(apiKey: string): Promise<BalanceResponse> {
   const res = await fetch(API_URL, {
     headers: {
@@ -32,7 +47,7 @@ function formatBalance(data: BalanceResponse["data"]): string {
   parts.push(`Available: $${available.toFixed(2)}`);
   if (voucher > 0) parts.push(`Voucher: $${voucher.toFixed(2)}`);
   if (cash > 0) parts.push(`Cash: $${cash.toFixed(2)}`);
-  return parts.join(" | ");
+  return parts.join(" · ");
 }
 
 async function getMoonshotApiKey(
@@ -46,19 +61,14 @@ async function getMoonshotApiKey(
   return await modelRegistry.getApiKeyForProvider("moonshotai");
 }
 
-async function refreshBalance(ui: ExtensionAPI["ui"], apiKey: string) {
+async function getBalanceStatus(apiKey: string): Promise<string> {
   try {
     const json = await fetchBalance(apiKey);
-    if (json.data) {
-      const text = formatBalance(json.data);
-      ui.setStatus("moonshot-balance", `🌙 ${text}`);
-    } else if (json.error) {
-      ui.setStatus("moonshot-balance", `🌙 Error: ${json.error.message ?? "Unknown"}`);
-    } else {
-      ui.setStatus("moonshot-balance", "🌙 No balance data");
-    }
+    if (json.data) return `🌙 ${formatBalance(json.data)}`;
+    if (json.error) return `🌙 Error: ${json.error.message ?? "Unknown"}`;
+    return "🌙 No balance data";
   } catch (err) {
-    ui.setStatus("moonshot-balance", `🌙 Error: ${err instanceof Error ? err.message : String(err)}`);
+    return `🌙 Error: ${err instanceof Error ? err.message : String(err)}`;
   }
 }
 
@@ -70,18 +80,25 @@ const DEBOUNCE_MS = 30_000;
 
 export default function (pi: ExtensionAPI) {
   let lastFetchTime = 0;
+  const rightFooterState = getRightFooterState();
 
-  async function updateStatus(ctx: { ui: ExtensionAPI["ui"]; modelRegistry: ExtensionAPI["modelRegistry"]; model: Model<any> | undefined }) {
+  function setMoonshotStatus(text: string | undefined) {
+    if (text) rightFooterState.statuses.set("moonshot-balance", text);
+    else rightFooterState.statuses.delete("moonshot-balance");
+    rightFooterState.requestRender?.();
+  }
+
+  async function updateStatus(ctx: { modelRegistry: ExtensionAPI["modelRegistry"]; model: Model<any> | undefined }) {
     if (!isMoonshotModel(ctx.model)) {
-      ctx.ui.setStatus("moonshot-balance", undefined);
+      setMoonshotStatus(undefined);
       return;
     }
     const apiKey = await getMoonshotApiKey(ctx.modelRegistry);
     if (!apiKey) {
-      ctx.ui.setStatus("moonshot-balance", "🌙 No Moonshot key (use /login or auth.json)");
+      setMoonshotStatus("🌙 No Moonshot key (use /login or auth.json)");
       return;
     }
-    await refreshBalance(ctx.ui, apiKey);
+    setMoonshotStatus(await getBalanceStatus(apiKey));
     lastFetchTime = Date.now();
   }
 
@@ -99,6 +116,10 @@ export default function (pi: ExtensionAPI) {
     await updateStatus(ctx);
   });
 
+  pi.on("session_shutdown", async () => {
+    rightFooterState.statuses.delete("moonshot-balance");
+  });
+
   pi.registerCommand("balance", {
     description: "Show Moonshot account balance",
     handler: async (_args, ctx) => {
@@ -112,7 +133,7 @@ export default function (pi: ExtensionAPI) {
         if (json.data) {
           const text = formatBalance(json.data);
           ctx.ui.notify(`🌙 Moonshot: ${text}`, "info");
-          ctx.ui.setStatus("moonshot-balance", `🌙 ${text}`);
+          if (isMoonshotModel(ctx.model)) setMoonshotStatus(`🌙 ${text}`);
         } else if (json.error) {
           ctx.ui.notify(`Moonshot error: ${json.error.message ?? "Unknown"}`, "error");
         } else {
