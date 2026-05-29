@@ -10,6 +10,7 @@ Personal setup for the [Pi coding agent](https://github.com/earendil-works/pi-co
 | Reasoning cycle | `extensions/reasoning-cycle.ts` | Adds keyboard shortcuts for cycling the active model's reasoning/thinking level up or down during a Pi session, including raw terminal fallbacks for `Alt+,` and `Alt+.`. |
 | Moonshot balance | `extensions/moonshot-balance.ts` | Displays your Moonshot account balance in the Pi status bar when a Moonshot model is active. Also registers a `/balance` command to show the balance on demand. |
 | Prompt timer | `extensions/prompt-timer.ts` | Shows a live prompt duration widget above the editor while Pi is working, then leaves the final duration visible until the next prompt starts. |
+| Minimal tool calls | `extensions/minimal-tool-calls.ts` | Overrides built-in tool renderers so collapsed tool rows are one-line summaries with a solid status dot after the tool name; expand tool rows to see the default detailed output. |
 
 ## Usage
 
