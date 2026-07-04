@@ -1,0 +1,47 @@
+{
+  "lastChangelogVersion": "0.80.3",
+  "enableInstallTelemetry": false,
+  "packages": [
+    "npm:pi-mcp-adapter",
+    "npm:@juicesharp/rpiv-ask-user-question",
+    "npm:@juicesharp/rpiv-btw",
+    "npm:pi-web-access",
+    "npm:@plannotator/pi-extension",
+    "npm:@ff-labs/pi-fff",
+    "npm:@tintinweb/pi-subagents",
+    "npm:@tintinweb/pi-tasks",
+    "git:github.com/Dolliwyx/pi-cc-tools"
+  ],
+  "defaultProvider": "openai-codex",
+  "defaultModel": "gpt-5.5",
+  "defaultThinkingLevel": "low",
+  "hideThinkingBlock": true,
+  "quietStartup": true,
+  "enabledModels": [
+    "openai-codex/gpt-5.5",
+    "moonshotai/kimi-k2.6",
+    "moonshotai/kimi-k2.7-code"
+  ],
+  "editorPaddingX": 2,
+  "collapseChangelog": false,
+  "treeFilterMode": "user-only",
+  "theme": "dark",
+  "extensions": [
+    "-extensions/minimal-tool-calls.ts",
+    "-extensions/clean-codeblocks.ts",
+    "-extensions/prompt-timer.ts"
+  ],
+  "skills": [
+    "+skills/to-prd/SKILL.md",
+    "+skills/prototype/SKILL.md",
+    "+skills/improve-codebase-architecture/SKILL.md",
+    "+skills/impeccable/SKILL.md",
+    "+skills/hatch-pet/SKILL.md",
+    "+skills/handoff/SKILL.md",
+    "+skills/grill-with-docs/SKILL.md"
+  ],
+  "outputPad": 1,
+  "terminal": {
+    "showTerminalProgress": true
+  }
+}
