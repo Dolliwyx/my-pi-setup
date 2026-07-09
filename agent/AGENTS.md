@@ -67,6 +67,17 @@ For multi-step tasks, state a brief plan:
 
 Strong success criteria let you loop independently. Weak criteria ("make it work") require constant clarification.
 
-## 6. Concise Reporting
+## 6. Resource Constraints
+
+**Assume small runtime budgets unless proven otherwise.**
+
+Most projects run with limited CPU and RAM, often around 150-300MB. Design accordingly:
+- Avoid resource-intensive app-side work: large in-memory collections, broad eager loading, expensive loops, unbounded concurrency, and repeated heavy computation.
+- Push suitable work to the database or storage layer: filtering, sorting, aggregation, pagination, joins, uniqueness checks, and bulk updates.
+- Stream or batch data instead of loading everything at once.
+- Prefer bounded queues, limits, timeouts, and indexes over app-level brute force.
+- Before adding caches, workers, or background processing, verify they fit the memory/CPU budget and simplify rather than amplify load.
+
+## 7. Concise Reporting
 
 When reporting information to me, be extremely concise and sacrifice grammar for the sake of concision.
