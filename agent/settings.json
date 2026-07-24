@@ -1,5 +1,5 @@
 {
-  "lastChangelogVersion": "0.80.3",
+  "lastChangelogVersion": "0.82.0",
   "enableInstallTelemetry": false,
   "packages": [
     "npm:pi-mcp-adapter",
@@ -10,17 +10,22 @@
     "npm:@ff-labs/pi-fff",
     "npm:@tintinweb/pi-subagents",
     "npm:@tintinweb/pi-tasks",
-    "git:github.com/Dolliwyx/pi-cc-tools"
+    "git:github.com/Dolliwyx/pi-cc-tools",
+    "git:github.com/edxeth/pi-gpt-config",
+    "npm:cc-safety-net",
+    "npm:@ogulcancelik/pi-herdr"
   ],
   "defaultProvider": "openai-codex",
-  "defaultModel": "gpt-5.5",
+  "defaultModel": "gpt-5.6-luna",
   "defaultThinkingLevel": "low",
   "hideThinkingBlock": true,
   "quietStartup": true,
   "enabledModels": [
     "openai-codex/gpt-5.5",
-    "moonshotai/kimi-k2.6",
-    "moonshotai/kimi-k2.7-code"
+    "openai-codex/gpt-5.6-luna",
+    "openai-codex/gpt-5.6-sol",
+    "openai-codex/gpt-5.6-terra",
+    "moonshotai/kimi-k3"
   ],
   "editorPaddingX": 2,
   "collapseChangelog": false,
@@ -43,5 +48,15 @@
   "outputPad": 1,
   "terminal": {
     "showTerminalProgress": true
+  },
+  "steeringMode": "one-at-a-time",
+  "showCacheMissNotices": true,
+  "gptConfig": {
+    "fastMode": false,
+    "personality": "claude",
+    "verbosity": "low",
+    "summary": "auto",
+    "toolDiscipline": "on",
+    "showFooter": false
   }
 }
