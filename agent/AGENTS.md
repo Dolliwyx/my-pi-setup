@@ -47,9 +47,16 @@ The test: Every changed line should trace directly to the user's request.
 
 - Handle work directly by default.
 - Only invoke subagents when the user explicitly asks for subagents, delegation, parallel agents, review agents, or similar.
+- Use one subagent whenever possible; use multiple only when the task clearly benefits from parallel or distinct workstreams.
+- When the user requests a `sol`, `terra`, or `luna` subagent, call the subagent tool with the corresponding `model`: `sol` → `gpt-5.6-sol`, `terra` → `gpt-5.6-terra`, `luna` → `gpt-5.6-luna`.
 - When asked to create a new pi session to do a specific task, run a non-interactive pi session rather than using a subagent. Use `pi -p`, set an appropriate session name with `--name`, and inherit the main session's current reasoning level with `--thinking <level>` unless the user specifies a different reasoning level.
 
-## 5. Goal-Driven Execution
+## 5. Herdr Harness
+
+- Use `pi` as the Herdr coding-agent harness by default. Use a different harness only when the user explicitly names one.
+- For GPT models launched through Herdr, use the `openai-codex` provider.
+
+## 6. Goal-Driven Execution
 
 **Define success criteria. Loop until verified.**
 
@@ -67,7 +74,7 @@ For multi-step tasks, state a brief plan:
 
 Strong success criteria let you loop independently. Weak criteria ("make it work") require constant clarification.
 
-## 6. Resource Constraints
+## 7. Resource Constraints
 
 **Assume small runtime budgets unless proven otherwise.**
 
@@ -78,6 +85,14 @@ Most projects run with limited CPU and RAM, often around 150-300MB. Design accor
 - Prefer bounded queues, limits, timeouts, and indexes over app-level brute force.
 - Before adding caches, workers, or background processing, verify they fit the memory/CPU budget and simplify rather than amplify load.
 
-## 7. Concise Reporting
+## 8. Atomic Commits
+
+When committing multiple files, split independent changes into separate commits where practical. Group files that make up one cohesive change in the same commit. Prefer small, atomic, reviewable commits.
+
+## 9. Concise Reporting
 
 When reporting information to me, be extremely concise and sacrifice grammar for the sake of concision.
+
+## 10. tldraw Offline
+
+- When using the `tldraw-offline` skill, use `curl.exe` instead of `curl`.
