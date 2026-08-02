@@ -13,7 +13,7 @@ const RAW_SHORTCUTS = {
 	increase: "\x1b.",
 } as const;
 
-const ALL_LEVELS: ThinkingLevel[] = ["off", "minimal", "low", "medium", "high", "xhigh"];
+const ALL_LEVELS: ThinkingLevel[] = ["off", "minimal", "low", "medium", "high", "xhigh", "max"];
 
 type Direction = "increase" | "decrease";
 
