@@ -1,0 +1,41 @@
+{
+  "nextId": 4,
+  "tasks": [
+    {
+      "id": "1",
+      "subject": "Commit AGENTS instructions",
+      "description": "Inspect and commit only agent/AGENTS.md as a standalone Conventional Commit.",
+      "status": "completed",
+      "activeForm": "Committing AGENTS instructions",
+      "metadata": {},
+      "blocks": [],
+      "blockedBy": [],
+      "createdAt": 1785648455359,
+      "updatedAt": 1785648470910
+    },
+    {
+      "id": "2",
+      "subject": "Commit reasoning max support",
+      "description": "Commit only extensions/reasoning-cycle.ts as a separate Conventional Commit.",
+      "status": "completed",
+      "activeForm": "Committing reasoning max support",
+      "metadata": {},
+      "blocks": [],
+      "blockedBy": [],
+      "createdAt": 1785648455360,
+      "updatedAt": 1785648491484
+    },
+    {
+      "id": "3",
+      "subject": "Push both commits",
+      "description": "Push the current branch with both new commits to its configured upstream.",
+      "status": "completed",
+      "activeForm": "Pushing both commits",
+      "metadata": {},
+      "blocks": [],
+      "blockedBy": [],
+      "createdAt": 1785648455362,
+      "updatedAt": 1785648511696
+    }
+  ]
+}
