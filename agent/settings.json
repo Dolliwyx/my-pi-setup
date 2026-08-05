@@ -1,5 +1,5 @@
 {
-  "lastChangelogVersion": "0.82.0",
+  "lastChangelogVersion": "0.83.0",
   "enableInstallTelemetry": false,
   "packages": [
     "npm:pi-mcp-adapter",
@@ -10,14 +10,14 @@
     "npm:@ff-labs/pi-fff",
     "npm:@tintinweb/pi-subagents",
     "npm:@tintinweb/pi-tasks",
-    "git:github.com/Dolliwyx/pi-cc-tools",
     "git:github.com/edxeth/pi-gpt-config",
     "npm:cc-safety-net",
-    "npm:@ogulcancelik/pi-herdr"
+    "npm:@ogulcancelik/pi-herdr",
+    "git:github.com/dolliwyx/pi-cc-tools"
   ],
   "defaultProvider": "openai-codex",
-  "defaultModel": "gpt-5.6-luna",
-  "defaultThinkingLevel": "low",
+  "defaultModel": "gpt-5.6-sol",
+  "defaultThinkingLevel": "high",
   "hideThinkingBlock": true,
   "quietStartup": true,
   "enabledModels": [
