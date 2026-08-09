@@ -41,33 +41,30 @@ When your changes create orphans:
 
 The test: Every changed line should trace directly to the user's request.
 
-## 4. Agent Delegation
+## 4. Delegation
 
-**The main thread directly handles trivial or small changes; delegate when work is parallelizable, is a large or complex workflow, or the user explicitly requests delegation.**
+**Choose delegation by environment. Tell the user which mode you are using before starting.**
 
-- The main thread may directly make one-line, few-character, or other straightforward small file changes unless the user explicitly requests delegation.
-- When `HERDR_ENV` is absent or not `1`, qualifying delegated work uses subagents. Do not use Herdr in this mode.
-- Split qualifying work into separate subagents when the workstreams are genuinely independent and parallelization materially helps, or when the user explicitly requests multiple workers. Avoid unnecessary fragmentation otherwise.
+- The main thread may directly handle trivial or small changes unless the user explicitly requests delegation.
+- When `HERDR_ENV=1`, visible or interactive work uses Herdr. Use a Herdr pane by default for repository investigation, debugging, implementation, or any work the user may want to observe.
+- When `HERDR_ENV=1`, never use internal subagents for codebase work unless the user explicitly requests them. Internal subagents are only for small, disposable parallel lookups that do not modify the repository. If unsure, choose Herdr.
+- When `HERDR_ENV` is absent or not `1`, do not use Herdr. Use internal subagents for qualifying delegated work.
+- Keep Herdr and internal-subagent delegation mutually exclusive within a workstream.
+- In subagent mode, split work only when workstreams are genuinely independent and parallelization materially helps, or when the user explicitly requests multiple workers.
 - Give each subagent a clear scope, relevant context, success criteria, and expected verification.
-- Use the `Explore` subagent for broad code exploration.
-- Subagents must not create, inspect, or use Herdr panes.
 - Each subagent must report its results to the main thread when done. The main thread reviews the actual changes and verification, then sends feedback to the same subagent for any required corrections.
-- Prefer one delegated implementer unless multiple workstreams are genuinely independent.
 - In subagent mode, map `sol` → `gpt-5.6-sol`, `terra` → `gpt-5.6-terra`, and `luna` → `gpt-5.6-luna`.
 
 ## 5. Herdr Delegation
 
-**This section applies only when `HERDR_ENV=1`. Herdr delegation and worker-subagent delegation are mutually exclusive.**
+**This section applies only when `HERDR_ENV=1`.**
 
-- The main thread may directly handle trivial or small changes unless the user explicitly requests delegation; use Herdr panes when work is parallelizable, is a large or complex workflow, or the user explicitly requests delegation.
-- Instead of worker subagents, delegate qualifying work to Herdr panes.
-- Split qualifying work into separate panes when the workstreams are genuinely independent and parallelization materially helps, or when the user explicitly requests multiple panes.
+- Split qualifying work into separate panes only when workstreams are genuinely independent and parallelization materially helps, or when the user explicitly requests multiple panes.
 - Run `pi` in each delegated pane, pinned to `openai-codex/gpt-5.6-terra` with `high` thinking.
 - Give each pane a clear scope, relevant context, success criteria, and expected verification.
 - Each pane must report its results to the main thread when done. The main thread reviews the actual changes and verification, then sends feedback to that pane for any required corrections.
-- Herdr panes must not use worker subagents. The only subagent they may delegate to is `Explore`, for broad code exploration.
+- Herdr panes must not use internal subagents unless the user explicitly requests them.
 - Use `pi` as the Herdr coding-agent harness unless the user explicitly names another harness.
-- Do not use Herdr when `HERDR_ENV` is absent or not `1`.
 
 ## 6. Goal-Driven Execution
 
