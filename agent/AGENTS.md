@@ -43,24 +43,30 @@ The test: Every changed line should trace directly to the user's request.
 
 ## 4. Delegation
 
-**Choose delegation by environment. Tell the user which mode you are using before starting.**
+**Use subagents for code exploration and implementation. Tell the user which mode you are using before starting.**
 
-- The main thread may directly handle trivial or small changes unless the user explicitly requests delegation.
-- When `HERDR_ENV=1`, visible or interactive work uses Herdr. Use a Herdr pane by default for repository investigation, debugging, implementation, or any work the user may want to observe.
-- When `HERDR_ENV=1`, never use internal subagents for codebase work unless the user explicitly requests them. Internal subagents are only for small, disposable parallel lookups that do not modify the repository. If unsure, choose Herdr.
-- When `HERDR_ENV` is absent or not `1`, do not use Herdr. Use internal subagents for qualifying delegated work.
-- Keep Herdr and internal-subagent delegation mutually exclusive within a workstream.
-- In subagent mode, split work only when workstreams are genuinely independent and parallelization materially helps, or when the user explicitly requests multiple workers.
+- Delegate repository and code exploration only to the `Explore` subagent.
+- Delegate implementation work to `terra_worker` subagents.
+- Subagents must never delegate, spawn other subagents, create panes, or recursively invoke themselves.
+- Split work only when workstreams are genuinely independent and parallelization materially helps, or when the user explicitly requests multiple implementation agents.
 - Give each subagent a clear scope, relevant context, success criteria, and expected verification.
 - Each subagent must report its results to the main thread when done. The main thread reviews the actual changes and verification, then sends feedback to the same subagent for any required corrections.
-- In subagent mode, map `sol` → `gpt-5.6-sol`, `terra` → `gpt-5.6-terra`, and `luna` → `gpt-5.6-luna`.
+- Map `sol` → `gpt-5.6-sol`, `terra` → `gpt-5.6-terra`, and `luna` → `gpt-5.6-luna`.
+
+### Code exploration delegation
+
+- Only the top-level assistant may delegate code exploration.
+- If already running as a delegated agent or subagent, perform exploration directly with read-only tools.
 
 ## 5. Herdr Delegation
 
-**This section applies only when `HERDR_ENV=1`.**
+**Use Herdr only when the user explicitly requests it and `HERDR_ENV=1`. Both conditions are required.**
 
-- Split qualifying work into separate panes only when workstreams are genuinely independent and parallelization materially helps, or when the user explicitly requests multiple panes.
-- Run `pi` in each delegated pane, pinned to `openai-codex/gpt-5.6-terra` with `high` thinking.
+- If the user requests Herdr while `HERDR_ENV` is absent or not `1`, do not use Herdr; tell the user it is unavailable.
+- Keep Herdr and internal-subagent delegation mutually exclusive within a workstream.
+- Use Herdr only for implementation work, never for code exploration.
+- Split implementation work into separate panes only when workstreams are genuinely independent and parallelization materially helps, or when the user explicitly requests multiple panes.
+- Run `pi` in each delegated pane, pinned to `openai-codex/gpt-5.6-terra` with `max` thinking.
 - Give each pane a clear scope, relevant context, success criteria, and expected verification.
 - Each pane must report its results to the main thread when done. The main thread reviews the actual changes and verification, then sends feedback to that pane for any required corrections.
 - Herdr panes must not use internal subagents unless the user explicitly requests them.
