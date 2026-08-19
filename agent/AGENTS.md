@@ -114,3 +114,7 @@ When reporting information to me, be extremely concise and sacrifice grammar for
 ## 10. tldraw Offline
 
 - When using the `tldraw-offline` skill, use `curl.exe` instead of `curl`.
+
+## 11. Grilling
+
+- When using the `grilling` skill, ask every round through the available question tool, such as `ask_user_question` or `request_user_input`.
