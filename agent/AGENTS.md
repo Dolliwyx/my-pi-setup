@@ -46,9 +46,9 @@ The test: Every changed line should trace directly to the user's request.
 **Use subagents for code exploration and implementation. Tell the user which mode you are using before starting.**
 
 - Delegate repository and code exploration only to the `Explore` subagent.
-- Delegate implementation work to `terra_worker` subagents and choose the executor model for each task:
-  - `luna` for trivial or deterministic tasks.
-  - `terra` for normal implementation tasks.
+- Choose the executor subagent for each delegated implementation task:
+  - `luna_worker` for trivial or deterministic tasks.
+  - `terra_worker` for normal implementation tasks.
 - Subagents must never delegate, spawn other subagents, create panes, or recursively invoke themselves.
 - Split work only when workstreams are genuinely independent and parallelization materially helps, or when the user explicitly requests multiple implementation agents.
 - Give each subagent a clear scope, relevant context, success criteria, and expected verification.

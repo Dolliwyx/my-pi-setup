@@ -1,7 +1,7 @@
 ---
 description: Implements clearly scoped, bounded code or configuration tasks delegated by an orchestrator.
 tools: read, grep, find, ls, bash, edit, write
-model: openai-codex/gpt-5.6-terra
+model: openai-codex/gpt-5.6-luna
 thinking: max
 prompt_mode: replace
 ---
