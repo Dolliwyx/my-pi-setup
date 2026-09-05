@@ -1,5 +1,5 @@
 {
-  "lastChangelogVersion": "0.83.0",
+  "lastChangelogVersion": "0.84.4",
   "enableInstallTelemetry": false,
   "packages": [
     "npm:pi-mcp-adapter",
@@ -8,16 +8,17 @@
     "npm:pi-web-access",
     "npm:@plannotator/pi-extension",
     "npm:@ff-labs/pi-fff",
-    "npm:@tintinweb/pi-subagents",
     "npm:@tintinweb/pi-tasks",
     "git:github.com/edxeth/pi-gpt-config",
     "npm:cc-safety-net",
     "npm:@ogulcancelik/pi-herdr",
-    "git:github.com/dolliwyx/pi-cc-tools"
+    "git:github.com/dolliwyx/pi-cc-tools",
+    "npm:pi-add-dir",
+    "npm:@tintinweb/pi-subagents"
   ],
   "defaultProvider": "openai-codex",
-  "defaultModel": "gpt-5.6-sol",
-  "defaultThinkingLevel": "high",
+  "defaultModel": "gpt-6-astra",
+  "defaultThinkingLevel": "xhigh",
   "hideThinkingBlock": true,
   "quietStartup": true,
   "enabledModels": [
@@ -25,7 +26,8 @@
     "openai-codex/gpt-5.6-luna",
     "openai-codex/gpt-5.6-sol",
     "openai-codex/gpt-5.6-terra",
-    "moonshotai/kimi-k3"
+    "moonshotai/kimi-k3",
+    "openai-codex/gpt-6-astra"
   ],
   "editorPaddingX": 2,
   "collapseChangelog": false,
@@ -37,11 +39,9 @@
     "-extensions/prompt-timer.ts"
   ],
   "skills": [
-    "+skills/to-prd/SKILL.md",
     "+skills/prototype/SKILL.md",
     "+skills/improve-codebase-architecture/SKILL.md",
     "+skills/impeccable/SKILL.md",
-    "+skills/hatch-pet/SKILL.md",
     "+skills/handoff/SKILL.md",
     "+skills/grill-with-docs/SKILL.md"
   ],
@@ -51,6 +51,18 @@
   },
   "steeringMode": "one-at-a-time",
   "showCacheMissNotices": true,
+  "subagents": {
+    "agentOverrides": {
+      "scout": {
+        "model": "openai-codex/gpt-5.6-terra",
+        "thinking": "high"
+      },
+      "worker": {
+        "model": "openai-codex/gpt-5.6-terra",
+        "thinking": "max"
+      }
+    }
+  },
   "gptConfig": {
     "fastMode": false,
     "personality": "claude",
@@ -58,5 +70,6 @@
     "summary": "auto",
     "toolDiscipline": "on",
     "showFooter": false
-  }
+  },
+  "tuiMode": "fullscreen"
 }

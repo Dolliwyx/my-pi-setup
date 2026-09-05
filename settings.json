@@ -1,0 +1,14 @@
+{
+  "groupToolCalls": true,
+  "toolBackground": "transparent",
+  "bashOutputMode": "opencode",
+  "readOutputMode": "preview",
+  "searchOutputMode": "preview",
+  "mcpOutputMode": "preview",
+  "liveToolPreview": true,
+  "themeAdaptive": true,
+  "userMessageStyle": "highlight",
+  "userMessageBorder": true,
+  "codeBlockBorder": false,
+  "extraToolOutputExpanded": false
+}

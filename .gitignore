@@ -1,0 +1,24 @@
+# Project-local Pi task state
+.pi/tasks/
+
+# Pi credentials and machine-generated state
+agent/auth.json
+agent/trust.json
+agent/mcp-oauth/
+agent/mcp-cache.json
+agent/mcp-onboarding.json
+agent/models-store.json
+agent/run-history.jsonl
+agent/sessions/
+agent/missions/
+agent/fff/
+agent/git/
+agent/npm/
+agent/skills/
+agent/extensions/herdr-agent-state.ts
+
+# Top-level Pi runtime state
+cache/
+pi-acp/
+tasks/
+web-search-cache/
