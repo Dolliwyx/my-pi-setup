@@ -125,7 +125,17 @@ function clampPercent(value: number): number {
 }
 
 function remainingPercent(window: WindowInfo): number | undefined {
-	return typeof window.used_percent === "number" ? clampPercent(100 - window.used_percent) : undefined;
+	return typeof window.used_percent === "number" && Number.isFinite(window.used_percent)
+		? clampPercent(100 - window.used_percent)
+		: undefined;
+}
+
+function formatRemaining(window: WindowInfo): string {
+	const left = remainingPercent(window);
+	if (left === undefined) return "? left";
+
+	const filled = Math.round(left / 10);
+	return `[${"█".repeat(filled)}${"░".repeat(10 - filled)}] ${left}% left`;
 }
 
 function formatDuration(seconds: number): string {
@@ -201,11 +211,12 @@ function formatDetails(data: CodexUsageResponse): string {
 
 	const details = [headerParts.join(" · ")];
 	for (const { label, window, limitReached } of getQuotaLines(data)) {
-		const left = remainingPercent(window);
-		const used = typeof window.used_percent === "number" ? clampPercent(window.used_percent) : undefined;
+		const used = typeof window.used_percent === "number" && Number.isFinite(window.used_percent)
+			? clampPercent(window.used_percent)
+			: undefined;
 		const state = limitReached ? " limit reached" : "";
 		details.push(
-			`${label}: ${left === undefined ? "?" : `${left}%`} left${used === undefined ? "" : ` (${used}% used)`}; resets in ${formatReset(window)}${state}`,
+			`${label}: ${formatRemaining(window)}${used === undefined ? "" : ` (${used}% used)`}; resets in ${formatReset(window)}${state}`,
 		);
 	}
 
