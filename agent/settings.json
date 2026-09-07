@@ -1,5 +1,5 @@
 {
-  "lastChangelogVersion": "0.84.4",
+  "lastChangelogVersion": "0.85.1",
   "enableInstallTelemetry": false,
   "packages": [
     "npm:pi-mcp-adapter",
@@ -14,7 +14,8 @@
     "npm:@ogulcancelik/pi-herdr",
     "git:github.com/dolliwyx/pi-cc-tools",
     "npm:pi-add-dir",
-    "npm:@tintinweb/pi-subagents"
+    "npm:@tintinweb/pi-subagents",
+    "git:github.com/DietrichGebert/ponytail"
   ],
   "defaultProvider": "openai-codex",
   "defaultModel": "gpt-6-astra",
@@ -43,7 +44,8 @@
     "+skills/improve-codebase-architecture/SKILL.md",
     "+skills/impeccable/SKILL.md",
     "+skills/handoff/SKILL.md",
-    "+skills/grill-with-docs/SKILL.md"
+    "+skills/grill-with-docs/SKILL.md",
+    "-skills/ponytail/SKILL.md"
   ],
   "outputPad": 1,
   "terminal": {

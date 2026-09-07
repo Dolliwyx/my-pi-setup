@@ -8,6 +8,7 @@ Behavioral defaults for coding tasks. Within the applicable instruction hierarch
 
 - Resolve questions from available context and repository evidence before asking the user.
 - Ask when missing information materially affects correctness, scope, or irreversible behavior. Otherwise, choose the simplest reasonable, reversible interpretation and proceed.
+- Use the harness's question tool (`ask_user_question` when available) for user questions and decisions, including skill-driven interviews such as grilling. This overrides skill-specific Markdown question formats; preserve their sequencing and recommendations while batching independent questions within the tool's limits. Use plain text only when no question tool is available.
 - State assumptions only when they materially affect the result.
 - Recommend a simpler approach when it satisfies the request; explain only material tradeoffs.
 - If a skill or instruction file causes a permission request, incomplete work, or a material departure from the requested outcome, identify the exact file and relevant instruction. Distinguish explicit requirements from your interpretation.
@@ -27,6 +28,7 @@ Behavioral defaults for coding tasks. Within the applicable instruction hierarch
 - Add the smallest maintainable change that satisfies current requirements. Avoid speculative features, flexibility, and configuration.
 - Introduce abstractions when they clarify current behavior or remove duplication. Optimize for clarity and maintainability rather than line count.
 - Handle plausible boundary failures using established project conventions.
+- Keep Ponytail's minimal-code approach, but do not add `ponytail:` comments. This overrides the Ponytail skill's comment-marker requirement; write ordinary explanatory comments only when useful.
 
 ## 4. Make Surgical Changes
 
@@ -46,24 +48,21 @@ Behavioral defaults for coding tasks. Within the applicable instruction hierarch
 - Run the narrowest meaningful checks and all required repository checks. Broaden or repeat verification only after relevant changes, failures, or a specific unresolved concern.
 - Stop when acceptance criteria are met and relevant checks pass. If verification cannot be completed, report what was not run and why.
 
-## 6. Delegate Only When Authorized
+## 6. Delegation
 
-- Work in the main agent by default. The top-level agent may use Explore without an explicit user request for open-ended, read-only code exploration. Use direct tools for known files, symbols, and small lookups. Explore must not perform implementation or general research.
-- All other internal subagents and multi-agent workflows require an explicit user request; complexity or potential speedups alone do not authorize their use.
-- The top-level agent may use Herdr and create the minimum necessary panes for bounded implementation tasks without a separate user request. This authorization is separate from internal-subagent and workflow permissions.
-- Before delegating through Herdr, read the `herdr-delegation` skill at `/home/dolliwyx/.pi/agent/skills/herdr-delegation/SKILL.md`. For this project, the authorization above replaces its requirement for an explicit Herdr request; the reasoning override in §7 also applies. Follow its remaining requirements unchanged.
-- Only the top-level agent may delegate or create panes. All delegated agents, including Herdr workers and internal subagents, must work directly within their assigned scope and must not spawn agents, launch workflows, create panes, or delegate through another mechanism.
-- Include the no-further-delegation restriction in every worker brief, together with scope, context, observable success criteria, and expected verification. Workers must return blockers or requests for additional workers to the top-level agent.
-- Parallelize only independent workstreams. Give each worker clear ownership of files or an isolated checkout where needed. Route scope changes and coordination through the top-level agent; workers must preserve changes outside their assignment.
-- The top-level agent reviews actual changes and verification before accepting delegated work; worker summaries alone are not proof of completion.
+- Work directly for small tasks. Delegate bounded work when it materially helps; keep task understanding, coordination, and acceptance in the main agent.
+- When `HERDR_ENV=1` and Herdr tools are available, use Herdr for delegated work, including exploration, implementation, and review. This policy authorizes bounded Herdr delegation without a separate user request, subject to higher-priority restrictions. Use internal subagents or multi-agent workflows only when explicitly requested.
+- Before any Herdr delegation, read `/home/dolliwyx/.agents/skills/herdr-delegation/SKILL.md`. That skill owns worker model selection and the execution procedure.
+- Outside Herdr, work directly unless the user authorizes internal subagents.
+- Only the main agent delegates. Workers execute their assigned scope without spawning agents, launching workflows, creating panes, or delegating through another mechanism; they return blockers to the main agent. Include this restriction in every worker brief.
+- Parallelize only independent workstreams with explicit file ownership or isolated checkouts. Preserve changes outside each assignment and verify actual results before accepting delegated work.
+- Honor explicit user choices and higher-priority restrictions. If Herdr is unavailable or prohibited, report the blocker rather than silently switching delegation mechanisms.
 
 ## 7. Model and Reasoning Defaults
 
 - Main agent: GPT-6 Astra at medium reasoning. Use high for ambiguous debugging, architecture, or consequential reviews.
-- Authorized implementation workers: Sol at medium reasoning. Use high for substantial implementation with difficult edge cases. Explore retains its configured model and reasoning defaults.
-- Use low for mechanical, well-specified edits. Reserve xhigh/max for unusually difficult problems when lower effort proves insufficient; task size alone does not justify escalation.
-- Honor explicit user model and reasoning choices. Keep concrete model IDs and supported reasoning settings in agent configuration; these instructions do not change the active model automatically.
-- For this project, these worker reasoning defaults override the `herdr-delegation` skill's default of max. Follow its remaining requirements unchanged.
+- For Herdr workers, follow the model routing in the `herdr-delegation` skill. Explicitly requested internal subagents retain their configured defaults unless the user specifies otherwise.
+- Honor explicit user model and reasoning choices. Keep concrete provider/model IDs and supported reasoning settings in agent configuration; these instructions do not change the active model automatically.
 
 ## 8. Report Evidence Clearly
 
