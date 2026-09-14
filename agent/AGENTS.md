@@ -48,23 +48,7 @@ Behavioral defaults for coding tasks. Within the applicable instruction hierarch
 - Run the narrowest meaningful checks and all required repository checks. Broaden or repeat verification only after relevant changes, failures, or a specific unresolved concern.
 - Stop when acceptance criteria are met and relevant checks pass. If verification cannot be completed, report what was not run and why.
 
-## 6. Delegation
-
-- Work directly for small tasks. Delegate bounded work when it materially helps; keep task understanding, coordination, and acceptance in the main agent.
-- When `HERDR_ENV=1` and Herdr tools are available, use Herdr for delegated work, including exploration, implementation, and review. This policy authorizes bounded Herdr delegation without a separate user request, subject to higher-priority restrictions. Use internal subagents or multi-agent workflows only when explicitly requested.
-- Before any Herdr delegation, read `/home/dolliwyx/.agents/skills/herdr-delegation/SKILL.md`. That skill owns worker model selection and the execution procedure.
-- Outside Herdr, work directly unless the user authorizes internal subagents.
-- Only the main agent delegates. Workers execute their assigned scope without spawning agents, launching workflows, creating panes, or delegating through another mechanism; they return blockers to the main agent. Include this restriction in every worker brief.
-- Parallelize only independent workstreams with explicit file ownership or isolated checkouts. Preserve changes outside each assignment and verify actual results before accepting delegated work.
-- Honor explicit user choices and higher-priority restrictions. If Herdr is unavailable or prohibited, report the blocker rather than silently switching delegation mechanisms.
-
-## 7. Model and Reasoning Defaults
-
-- Main agent: GPT-6 Astra at medium reasoning. Use high for ambiguous debugging, architecture, or consequential reviews.
-- For Herdr workers, follow the model routing in the `herdr-delegation` skill. Explicitly requested internal subagents retain their configured defaults unless the user specifies otherwise.
-- Honor explicit user model and reasoning choices. Keep concrete provider/model IDs and supported reasoning settings in agent configuration; these instructions do not change the active model automatically.
-
-## 8. Report Evidence Clearly
+## 6. Report Evidence Clearly
 
 - Lead with the outcome in concise, grammatical prose.
 - Briefly report relevant changed files, verification, and blockers.
