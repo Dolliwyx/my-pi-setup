@@ -3,6 +3,7 @@ import type { ExtensionAPI, ExtensionContext } from "@earendil-works/pi-coding-a
 import { truncateToWidth, visibleWidth } from "@earendil-works/pi-tui";
 
 const USAGE_ENDPOINT = "https://chatgpt.com/backend-api/wham/usage";
+const RESET_CREDITS_ENDPOINT = "https://chatgpt.com/backend-api/wham/rate-limit-reset-credits";
 const DEBOUNCE_MS = 60_000;
 const JWT_CLAIM_PATH = "https://api.openai.com/auth";
 
@@ -26,6 +27,17 @@ interface CreditsInfo {
 	balance?: number | string;
 }
 
+interface ResetCredit {
+	status?: string;
+	title?: string;
+	expires_at?: string;
+}
+
+interface ResetCreditsInfo {
+	available_count?: number;
+	credits?: ResetCredit[];
+}
+
 interface CodexUsageResponse {
 	email?: string;
 	plan_type?: string;
@@ -33,6 +45,7 @@ interface CodexUsageResponse {
 	code_review_rate_limit?: RateLimitInfo;
 	additional_rate_limits?: unknown;
 	credits?: CreditsInfo;
+	rate_limit_reset_credits?: ResetCreditsInfo;
 	spend_control?: { reached?: boolean };
 }
 
@@ -88,15 +101,22 @@ function extractAccountId(token: string): string | undefined {
 	}
 }
 
-async function fetchCodexUsage(apiKey: string, signal?: AbortSignal): Promise<CodexUsageResponse> {
+async function fetchCodexJson<T>(
+	endpoint: string,
+	label: string,
+	apiKey: string,
+	signal?: AbortSignal,
+	extraHeaders: Record<string, string> = {},
+): Promise<T> {
 	const accountId = extractAccountId(apiKey);
 	const headers: Record<string, string> = {
 		Authorization: `Bearer ${apiKey}`,
 		Accept: "application/json",
+		...extraHeaders,
 	};
 	if (accountId) headers["ChatGPT-Account-Id"] = accountId;
 
-	const res = await fetch(USAGE_ENDPOINT, { headers, signal });
+	const res = await fetch(endpoint, { method: "GET", headers, redirect: "error", signal });
 	const text = await res.text();
 	let parsed: unknown;
 	try {
@@ -110,10 +130,20 @@ async function fetchCodexUsage(apiKey: string, signal?: AbortSignal): Promise<Co
 			typeof parsed === "object" && parsed && "error" in parsed
 				? JSON.stringify((parsed as { error: unknown }).error)
 				: text || res.statusText;
-		throw new Error(`Codex usage request failed (${res.status}): ${message}`);
+		throw new Error(`Codex ${label} request failed (${res.status}): ${message}`);
 	}
 
-	return (parsed ?? {}) as CodexUsageResponse;
+	return (parsed ?? {}) as T;
+}
+
+function fetchCodexUsage(apiKey: string, signal?: AbortSignal): Promise<CodexUsageResponse> {
+	return fetchCodexJson(USAGE_ENDPOINT, "usage", apiKey, signal);
+}
+
+function fetchResetCredits(apiKey: string, signal?: AbortSignal): Promise<ResetCreditsInfo> {
+	return fetchCodexJson(RESET_CREDITS_ENDPOINT, "reset credits", apiKey, signal, {
+		originator: "Codex Desktop",
+	});
 }
 
 function isCodexModel(model: { provider: string } | undefined): boolean {
@@ -169,6 +199,23 @@ function formatReset(window: WindowInfo): string {
 	return `${relative} (${new Date(window.reset_at * 1000).toLocaleString()})`;
 }
 
+function formatExpiry(value: string | undefined): string {
+	const expiresAt = value ? Date.parse(value) : Number.NaN;
+	if (!Number.isFinite(expiresAt)) return "unknown";
+	return `${formatDuration((expiresAt - Date.now()) / 1000)} (${new Date(expiresAt).toLocaleString()})`;
+}
+
+function getAvailableResetCredits(data: CodexUsageResponse): ResetCredit[] {
+	return (data.rate_limit_reset_credits?.credits ?? []).filter(
+		(credit) => !credit.status || credit.status.toLowerCase() === "available",
+	);
+}
+
+function getResetCount(data: CodexUsageResponse): number | undefined {
+	const count = data.rate_limit_reset_credits?.available_count;
+	return typeof count === "number" && Number.isFinite(count) ? Math.max(0, Math.trunc(count)) : undefined;
+}
+
 function getQuotaLines(data: CodexUsageResponse): QuotaLine[] {
 	const lines: QuotaLine[] = [];
 	const primary = data.rate_limit?.primary_window;
@@ -191,7 +238,7 @@ function formatCredits(credits: CreditsInfo | undefined): string | undefined {
 	return `${balance} credits`;
 }
 
-function formatStatus(data: CodexUsageResponse): string {
+export function formatStatus(data: CodexUsageResponse): string {
 	const lines = getQuotaLines(data);
 	const limitReached = data.rate_limit?.limit_reached || data.spend_control?.reached;
 	const prefix = limitReached ? "⛔ Codex" : "⚡ Codex";
@@ -201,10 +248,12 @@ function formatStatus(data: CodexUsageResponse): string {
 	});
 	const credits = formatCredits(data.credits);
 	if (credits) parts.push(credits);
+	const resetCount = getResetCount(data);
+	if (resetCount) parts.push(`${resetCount} reset${resetCount === 1 ? "" : "s"}`);
 	return parts.length > 0 ? `${prefix} ${parts.join(" · ")}` : `${prefix} quota unavailable`;
 }
 
-function formatDetails(data: CodexUsageResponse): string {
+export function formatDetails(data: CodexUsageResponse): string {
 	const headerParts = ["Codex quota"];
 	if (data.plan_type) headerParts.push(`plan: ${data.plan_type}`);
 	if (data.email) headerParts.push(data.email);
@@ -222,6 +271,20 @@ function formatDetails(data: CodexUsageResponse): string {
 
 	const credits = formatCredits(data.credits);
 	if (credits) details.push(`Credits: ${credits}`);
+
+	const resetCount = getResetCount(data);
+	if (resetCount !== undefined) {
+		const resets = getAvailableResetCredits(data);
+		details.push(`Banked resets: ${resetCount} available`);
+		for (const [index, reset] of resets.entries()) {
+			details.push(`  ${index + 1}. ${reset.title ?? "Reset"}; expires in ${formatExpiry(reset.expires_at)}`);
+		}
+		if (resetCount > resets.length) {
+			const missing = resetCount - resets.length;
+			details.push(`  ${missing} more reset${missing === 1 ? "" : "s"}; expiration unavailable`);
+		}
+	}
+
 	if (data.rate_limit?.allowed === false) details.push("Requests are currently not allowed by the main Codex rate limit.");
 	if (data.spend_control?.reached) details.push("Spend control is reached.");
 	if (details.length === 1) details.push("No rate-limit windows were returned.");
@@ -394,7 +457,19 @@ export default function (pi: ExtensionAPI) {
 			throw new Error("No openai-codex login found. Run /login and select ChatGPT Plus/Pro (Codex).");
 		}
 
-		inFlight = fetchCodexUsage(apiKey, ctx.signal);
+		inFlight = (async () => {
+			const usage = await fetchCodexUsage(apiKey, ctx.signal);
+			const resetCount = getResetCount(usage);
+			if (resetCount) {
+				try {
+					const resets = await fetchResetCredits(apiKey, ctx.signal);
+					usage.rate_limit_reset_credits = { ...resets, available_count: resetCount };
+				} catch {
+					// Keep the usage summary when optional reset-credit details are unavailable.
+				}
+			}
+			return usage;
+		})();
 		try {
 			cachedUsage = await inFlight;
 			lastFetchTime = Date.now();
