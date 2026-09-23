@@ -18,9 +18,9 @@
     "npm:cc-safety-net",
     "npm:@ogulcancelik/pi-herdr",
     "npm:pi-add-dir",
-    "npm:@tintinweb/pi-subagents",
     "git:github.com/DietrichGebert/ponytail",
-    "npm:pi-cc-extensions"
+    "npm:pi-cc-extensions",
+    "npm:pi-subagents"
   ],
   "defaultProvider": "openai-codex",
   "defaultModel": "gpt-5.6-sol",
@@ -34,7 +34,7 @@
   ],
   "editorPaddingX": 2,
   "collapseChangelog": false,
-  "treeFilterMode": "labeled-only",
+  "treeFilterMode": "no-tools",
   "theme": "dark",
   "extensions": [
     "-extensions/minimal-tool-calls.ts",
@@ -57,16 +57,7 @@
   "steeringMode": "one-at-a-time",
   "showCacheMissNotices": true,
   "subagents": {
-    "agentOverrides": {
-      "scout": {
-        "model": "openai-codex/gpt-5.6-terra",
-        "thinking": "high"
-      },
-      "worker": {
-        "model": "openai-codex/gpt-5.6-terra",
-        "thinking": "max"
-      }
-    }
+    "disableBuiltins": true
   },
   "gptConfig": {
     "fastMode": false,
