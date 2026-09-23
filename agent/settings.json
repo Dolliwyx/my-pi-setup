@@ -1,5 +1,5 @@
 {
-  "lastChangelogVersion": "0.86.1",
+  "lastChangelogVersion": "0.87.1",
   "enableInstallTelemetry": false,
   "packages": [
     "npm:pi-mcp-adapter",
@@ -9,13 +9,18 @@
     "npm:@plannotator/pi-extension",
     "npm:@ff-labs/pi-fff",
     "npm:@tintinweb/pi-tasks",
-    "git:github.com/edxeth/pi-gpt-config",
+    {
+      "source": "git:github.com/edxeth/pi-gpt-config",
+      "extensions": [
+        "+index.ts"
+      ]
+    },
     "npm:cc-safety-net",
     "npm:@ogulcancelik/pi-herdr",
-    "git:github.com/dolliwyx/pi-cc-tools",
     "npm:pi-add-dir",
     "npm:@tintinweb/pi-subagents",
-    "git:github.com/DietrichGebert/ponytail"
+    "git:github.com/DietrichGebert/ponytail",
+    "npm:pi-cc-extensions"
   ],
   "defaultProvider": "openai-codex",
   "defaultModel": "gpt-5.6-sol",
@@ -24,18 +29,18 @@
   "quietStartup": true,
   "enabledModels": [
     "openai-codex/gpt-6-astra",
-    "openai-codex/gpt-5.6-sol",
-    "openai-codex/gpt-5.6-terra",
-    "openai-codex/gpt-5.6-luna"
+    "openai-codex/gpt-6-sol",
+    "openai-codex/gpt-6-luna"
   ],
   "editorPaddingX": 2,
   "collapseChangelog": false,
-  "treeFilterMode": "user-only",
+  "treeFilterMode": "labeled-only",
   "theme": "dark",
   "extensions": [
     "-extensions/minimal-tool-calls.ts",
     "-extensions/clean-codeblocks.ts",
-    "-extensions/prompt-timer.ts"
+    "-extensions/prompt-timer.ts",
+    "+extensions/codex-quota.ts"
   ],
   "skills": [
     "+skills/prototype/SKILL.md",
@@ -71,5 +76,6 @@
     "toolDiscipline": "on",
     "showFooter": false
   },
-  "tuiMode": "fullscreen"
+  "tuiMode": "fullscreen",
+  "fullscreenExitOutput": "transcript"
 }

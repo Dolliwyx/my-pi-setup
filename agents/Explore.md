@@ -2,7 +2,7 @@
 description: Read-only codebase explorer that adapts search breadth and depth to the context needed for the task
 display_name: Explore
 tools: read, grep, find, ls, bash
-model: openai-codex/gpt-5.6-terra
+model: openai-codex/gpt-6-luna
 thinking: high
 prompt_mode: replace
 ---
