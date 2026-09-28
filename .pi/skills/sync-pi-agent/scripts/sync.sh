@@ -90,6 +90,20 @@ sync_if_present AGENTS.md agent/AGENTS.md
 sync_if_present settings.json agent/settings.json
 sync_if_present keybindings.json agent/keybindings.json
 
+if [[ -d $source_root/extensions && ! -L $source_root/extensions ]]; then
+  while IFS= read -r -d '' relative; do
+    name=${relative#extensions/}
+    [[ $name != */* ]] || continue
+    case "$name" in
+      *.ts|*.tsx|*.js|*.mjs|*.cjs) ;;
+      *) continue ;;
+    esac
+    if [[ -f $repo_root/$relative && ! -L $repo_root/$relative ]]; then
+      sync_if_present "$relative" "$relative"
+    fi
+  done < <(git -C "$repo_root" ls-files -z -- extensions)
+fi
+
 for section in agents rules; do
   while IFS= read -r -d '' source; do
     name=${source##*/}
