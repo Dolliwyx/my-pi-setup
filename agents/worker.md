@@ -3,7 +3,7 @@ name: worker
 description: Implement a bounded, approved code change and verify it
 model: openai-codex/gpt-6-luna
 thinking: high
-tools: read, grep, find, ls, bash, edit, write
+tools: read, write, edit, ffgrep, fffind, search_external_files, add_directory
 acceptanceRole: writer
 inheritProjectContext: true
 inheritGlobalContext: true

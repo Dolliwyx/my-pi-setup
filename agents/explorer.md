@@ -3,7 +3,7 @@ name: explorer
 description: Read-only codebase exploration to locate relevant code, docs, tests, and data flow
 model: openai-codex/gpt-6-luna
 thinking: medium
-tools: read, grep, find, ls
+tools: read, ffgrep, fffind, add_directory, search_external_files
 acceptanceRole: read-only
 inheritProjectContext: true
 inheritGlobalContext: true

@@ -3,7 +3,7 @@ name: scout
 description: Cheap read-only scan for obvious code locations when mistakes are low-cost
 model: openai-codex/gpt-6-luna
 thinking: low
-tools: read, grep, find, ls
+tools: read, ffgrep, fffind, add_directory, search_external_files
 acceptanceRole: read-only
 inheritProjectContext: true
 inheritGlobalContext: true
