@@ -1,0 +1,10 @@
+{
+  "mcpServers": {
+    "TeamBrain": {
+      "url": "https://api.team-brain.com/mcp",
+      "headers": {
+        "Authorization": "Bearer YOUR_TEAM_BRAIN_TOKEN"
+      }
+    }
+  }
+}
