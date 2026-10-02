@@ -1,8 +1,7 @@
 {
-  "lastChangelogVersion": "0.87.1",
+  "lastChangelogVersion": "1.0.0",
   "enableInstallTelemetry": false,
   "packages": [
-    "npm:pi-mcp-adapter",
     "npm:@juicesharp/rpiv-ask-user-question",
     "npm:@juicesharp/rpiv-btw",
     "npm:pi-web-access",
@@ -20,19 +19,19 @@
     "npm:pi-add-dir",
     "git:github.com/DietrichGebert/ponytail",
     "npm:pi-cc-extensions",
-    "npm:pi-subagents",
-    "npm:@narumitw/pi-usage"
+    "npm:@narumitw/pi-usage",
+    "npm:@zigai/pi-mention-skill",
+    "git:github.com/Dolliwyx/pi-subagents@feat/collapse-viewer-results"
   ],
   "defaultProvider": "openai-codex",
-  "defaultModel": "gpt-6-sol",
+  "defaultModel": "gpt-6.1-sol",
   "defaultThinkingLevel": "medium",
   "hideThinkingBlock": true,
   "quietStartup": true,
   "enabledModels": [
     "openai-codex/gpt-6-astra",
-    "openai-codex/gpt-6-sol",
-    "openai-codex/gpt-6-luna",
-    "moonshotai/kimi-k3"
+    "openai-codex/gpt-6.1-sol",
+    "openai-codex/gpt-6-luna"
   ],
   "editorPaddingX": 2,
   "collapseChangelog": false,
@@ -42,7 +41,8 @@
     "-extensions/minimal-tool-calls.ts",
     "-extensions/clean-codeblocks.ts",
     "-extensions/prompt-timer.ts",
-    "+extensions/codex-quota.ts"
+    "+extensions/codex-quota.ts",
+    "-extensions/finish-sound.ts"
   ],
   "skills": [
     "+skills/prototype/SKILL.md",
