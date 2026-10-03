@@ -5,6 +5,7 @@ import { truncateToWidth, visibleWidth } from "@earendil-works/pi-tui";
 const USAGE_ENDPOINT = "https://chatgpt.com/backend-api/wham/usage";
 const RESET_CREDITS_ENDPOINT = "https://chatgpt.com/backend-api/wham/rate-limit-reset-credits";
 const DEBOUNCE_MS = 60_000;
+const REQUEST_TIMEOUT_MS = 10_000;
 const JWT_CLAIM_PATH = "https://api.openai.com/auth";
 
 interface WindowInfo {
@@ -116,8 +117,11 @@ async function fetchCodexJson<T>(
 	};
 	if (accountId) headers["ChatGPT-Account-Id"] = accountId;
 
-	const res = await fetch(endpoint, { method: "GET", headers, redirect: "error", signal });
-	const text = await res.text();
+	signal = AbortSignal.any([AbortSignal.timeout(REQUEST_TIMEOUT_MS), ...(signal ? [signal] : [])]);
+	signal.throwIfAborted();
+	const res = await withAbort(fetch(endpoint, { method: "GET", headers, redirect: "error", signal }), signal);
+	const text = await withAbort(res.text(), signal);
+	signal.throwIfAborted();
 	let parsed: unknown;
 	try {
 		parsed = text ? JSON.parse(text) : undefined;
@@ -144,6 +148,20 @@ function fetchResetCredits(apiKey: string, signal?: AbortSignal): Promise<ResetC
 	return fetchCodexJson(RESET_CREDITS_ENDPOINT, "reset credits", apiKey, signal, {
 		originator: "Codex Desktop",
 	});
+}
+
+async function withAbort<T>(promise: Promise<T>, signal: AbortSignal): Promise<T> {
+	let onAbort: () => void = () => {};
+	const aborted = new Promise<never>((_resolve, reject) => {
+		onAbort = () => reject(signal.reason);
+		if (signal.aborted) onAbort();
+		else signal.addEventListener("abort", onAbort, { once: true });
+	});
+	try {
+		return await Promise.race([promise, aborted]);
+	} finally {
+		signal.removeEventListener("abort", onAbort);
+	}
 }
 
 function isCodexModel(model: { provider: string } | undefined): boolean {
@@ -418,6 +436,7 @@ export default function (pi: ExtensionAPI) {
 	let lastFetchTime = 0;
 	let cachedUsage: CodexUsageResponse | undefined;
 	let inFlight: Promise<CodexUsageResponse> | undefined;
+	let sessionController: AbortController | undefined;
 	const rightFooterState = getRightFooterState();
 	let requestFooterRender: (() => void) | undefined;
 
@@ -448,38 +467,56 @@ export default function (pi: ExtensionAPI) {
 		});
 	}
 
+	function resetRefresh() {
+		sessionController?.abort();
+		sessionController = new AbortController();
+		inFlight = undefined;
+		cachedUsage = undefined;
+		lastFetchTime = 0;
+	}
+
 	async function readUsage(ctx: ExtensionContext, force: boolean): Promise<CodexUsageResponse> {
+		const session = sessionController;
+		if (!session) throw new Error("Codex quota session is not active.");
+		const signal = AbortSignal.any([session.signal, ...(ctx.signal ? [ctx.signal] : [])]);
+		signal.throwIfAborted();
 		if (!force && cachedUsage && Date.now() - lastFetchTime < DEBOUNCE_MS) return cachedUsage;
-		if (inFlight) return await inFlight;
+		if (inFlight) return await withAbort(inFlight, signal);
 
-		const apiKey = await getCodexApiKey(ctx.modelRegistry);
-		if (!apiKey) {
-			throw new Error("No openai-codex login found. Run /login and select ChatGPT Plus/Pro (Codex).");
-		}
-
-		inFlight = (async () => {
-			const usage = await fetchCodexUsage(apiKey, ctx.signal);
+		const request = (async () => {
+			const apiKey = await getCodexApiKey(ctx.modelRegistry);
+			signal.throwIfAborted();
+			if (!apiKey) {
+				throw new Error("No openai-codex login found. Run /login and select ChatGPT Plus/Pro (Codex).");
+			}
+			const usage = await fetchCodexUsage(apiKey, signal);
 			const resetCount = getResetCount(usage);
 			if (resetCount) {
 				try {
-					const resets = await fetchResetCredits(apiKey, ctx.signal);
+					const resets = await fetchResetCredits(apiKey, signal);
 					usage.rate_limit_reset_credits = { ...resets, available_count: resetCount };
 				} catch {
 					// Keep the usage summary when optional reset-credit details are unavailable.
 				}
 			}
+			signal.throwIfAborted();
 			return usage;
 		})();
+		inFlight = request;
 		try {
-			cachedUsage = await inFlight;
+			const usage = await withAbort(request, signal);
+			signal.throwIfAborted();
+			cachedUsage = usage;
 			lastFetchTime = Date.now();
-			return cachedUsage;
+			return usage;
 		} finally {
-			inFlight = undefined;
+			if (inFlight === request) inFlight = undefined;
 		}
 	}
 
 	async function updateStatus(ctx: ExtensionContext, options: { force?: boolean; notifyErrors?: boolean } = {}) {
+		const session = sessionController;
+		if (!session || session.signal.aborted) return;
 		if (!isCodexModel(ctx.model)) {
 			setQuotaStatus(undefined);
 			return;
@@ -487,8 +524,10 @@ export default function (pi: ExtensionAPI) {
 
 		try {
 			const usage = await readUsage(ctx, options.force ?? false);
+			if (session !== sessionController || session.signal.aborted || !isCodexModel(ctx.model)) return;
 			setQuotaStatus(formatStatus(usage));
 		} catch (err) {
+			if (session !== sessionController || session.signal.aborted || !isCodexModel(ctx.model)) return;
 			const message = err instanceof Error ? err.message : String(err);
 			setQuotaStatus("⚡ Codex quota error");
 			if (options.notifyErrors) ctx.ui.notify(message, "error");
@@ -496,11 +535,14 @@ export default function (pi: ExtensionAPI) {
 	}
 
 	pi.on("session_start", async (_event, ctx) => {
+		resetRefresh();
+		setQuotaStatus(undefined);
 		installFooter(ctx);
-		await updateStatus(ctx);
+		void updateStatus(ctx).catch(() => {});
 	});
 
 	pi.on("model_select", async (_event, ctx) => {
+		if (!isCodexModel(ctx.model)) resetRefresh();
 		await updateStatus(ctx, { force: isCodexModel(ctx.model) });
 	});
 
@@ -515,6 +557,7 @@ export default function (pi: ExtensionAPI) {
 	});
 
 	pi.on("session_shutdown", async () => {
+		sessionController?.abort();
 		rightFooterState.statuses.delete("codex-quota");
 		if (rightFooterState.requestRender === requestFooterRender) rightFooterState.requestRender = undefined;
 		requestFooterRender = undefined;
@@ -523,11 +566,14 @@ export default function (pi: ExtensionAPI) {
 	pi.registerCommand("codex-quota", {
 		description: "Show OpenAI Codex usage quota",
 		handler: async (_args, ctx) => {
+			const session = sessionController;
 			try {
 				const usage = await readUsage(ctx, true);
+				if (session !== sessionController || session?.signal.aborted) return;
 				if (isCodexModel(ctx.model)) setQuotaStatus(formatStatus(usage));
 				ctx.ui.notify(formatDetails(usage), "info");
 			} catch (err) {
+				if (session !== sessionController || session?.signal.aborted) return;
 				ctx.ui.notify(err instanceof Error ? err.message : String(err), "error");
 			}
 		},
