@@ -1,5 +1,5 @@
 {
-  "lastChangelogVersion": "1.0.0",
+  "lastChangelogVersion": "1.0.2",
   "enableInstallTelemetry": false,
   "packages": [
     "npm:@juicesharp/rpiv-ask-user-question",
@@ -45,11 +45,11 @@
     "-extensions/finish-sound.ts"
   ],
   "skills": [
-    "+skills/prototype/SKILL.md",
-    "+skills/improve-codebase-architecture/SKILL.md",
-    "+skills/impeccable/SKILL.md",
-    "+skills/handoff/SKILL.md",
-    "+skills/grill-with-docs/SKILL.md",
+    "+~/.agents/skills/prototype/SKILL.md",
+    "+~/.agents/skills/improve-codebase-architecture/SKILL.md",
+    "+~/.agents/skills/impeccable/SKILL.md",
+    "+~/.agents/skills/handoff/SKILL.md",
+    "+~/.agents/skills/grill-with-docs/SKILL.md",
     "-skills/ponytail/SKILL.md"
   ],
   "outputPad": 1,
