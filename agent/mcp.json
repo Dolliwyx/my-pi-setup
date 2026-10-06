@@ -1,5 +1,11 @@
 {
   "mcpServers": {
+    "shortcut": {
+      "url": "https://mcp.shortcut.com/mcp",
+      "headers": {
+        "Authorization": "Bearer YOUR_SHORTCUT_TOKEN"
+      }
+    },
     "TeamBrain": {
       "url": "https://api.team-brain.com/mcp",
       "headers": {

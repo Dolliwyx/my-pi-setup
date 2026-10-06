@@ -1,5 +1,5 @@
 {
-  "lastChangelogVersion": "1.0.2",
+  "lastChangelogVersion": "1.0.4",
   "enableInstallTelemetry": false,
   "packages": [
     "npm:@juicesharp/rpiv-ask-user-question",
@@ -21,7 +21,13 @@
     "npm:pi-cc-extensions",
     "npm:@narumitw/pi-usage",
     "npm:@zigai/pi-mention-skill",
-    "git:github.com/Dolliwyx/pi-subagents@feat/collapse-viewer-results"
+    {
+      "source": "git:github.com/Dolliwyx/pi-subagents@feat/collapse-viewer-results",
+      "extensions": [
+        "-src/index.ts"
+      ]
+    },
+    "../../Code/others/pi-subagents"
   ],
   "defaultProvider": "openai-codex",
   "defaultModel": "gpt-6.1-sol",
@@ -35,14 +41,16 @@
   ],
   "editorPaddingX": 2,
   "collapseChangelog": false,
-  "treeFilterMode": "no-tools",
-  "theme": "dark",
+  "treeFilterMode": "user-only",
+  "theme": "system",
   "extensions": [
     "-extensions/minimal-tool-calls.ts",
     "-extensions/clean-codeblocks.ts",
     "-extensions/prompt-timer.ts",
-    "+extensions/codex-quota.ts",
-    "-extensions/finish-sound.ts"
+    "-extensions/finish-sound.ts",
+    "-extensions/codex-quota.ts",
+    "-extensions/moonshot-balance.ts",
+    "-extensions/notify-done.ts"
   ],
   "skills": [
     "+~/.agents/skills/prototype/SKILL.md",
@@ -70,5 +78,8 @@
     "showFooter": false
   },
   "tuiMode": "fullscreen",
-  "fullscreenExitOutput": "transcript"
+  "fullscreenExitOutput": "transcript",
+  "enableSkillCommands": false,
+  "cacheWarming": "streaming",
+  "defaultProjectTrust": "ask"
 }
