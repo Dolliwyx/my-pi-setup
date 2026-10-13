@@ -9,7 +9,7 @@ import test from "node:test";
 const packagePath = process.env.PI_TEST_PACKAGE;
 if (!packagePath) throw new Error("Set PI_TEST_PACKAGE to the installed @earendil-works/pi-coding-agent directory.");
 const { loadExtensions } = await import(pathToFileURL(join(packagePath, "dist/core/extensions/loader.js")));
-const { visibleWidth } = await import(pathToFileURL(join(dirname(packagePath), "pi-tui/dist/index.js")));
+const { visibleWidth, sliceByColumn, stripTerminalSequences, TuiAltScreen } = await import(pathToFileURL(join(dirname(packagePath), "pi-tui/dist/index.js")));
 const { TuiBase } = await import(pathToFileURL(join(dirname(packagePath), "pi-tui/dist/tui.js")));
 const extensionPath = join(dirname(fileURLToPath(import.meta.url)), "index.ts");
 
@@ -27,15 +27,16 @@ test("real Pi loader, lifecycle persistence, right overlay, scrolling, sanitizat
 	loaded.runtime.appendEntry = (customType, data) => entries.push({ type: "custom", customType, data });
 	const notifications = [];
 	let component, options, renders = 0, closed = false;
-	const tui = { terminal: { rows: 24 }, requestRender: () => renders++ };
+	const tui = { terminal: { rows: 24, columns: 120 }, requestRender: () => renders++ };
 	const ctx = {
 		cwd, mode: "tui", hasUI: true,
 		sessionManager: { getEntries: () => entries },
 		ui: {
 			notify: (...args) => notifications.push(args),
 			custom: async (factory, opts) => {
-				options = opts;
 				component = factory(tui, { fg: (_color, text) => text }, {}, () => { closed = true; });
+				// Match Pi: resolve the options once, then retain the returned object.
+				options = { ...opts, overlayOptions: opts.overlayOptions() };
 			},
 		},
 	};
@@ -51,6 +52,10 @@ test("real Pi loader, lifecycle persistence, right overlay, scrolling, sanitizat
 	await extension.commands.get("diff").handler("", ctx);
 	assert.equal(options.overlay, true);
 	assert.equal(options.overlayOptions.anchor, "top-right");
+	const collapsed = component.render(60);
+	assert.match(collapsed.join("\n"), /▶ file/);
+	assert.doesNotMatch(collapsed.join("\n"), /baseline|untrusted/);
+	component.handleInput("\r");
 	const first = component.render(60);
 	assert.ok(first.join("\n").includes("baseline"));
 	assert.ok(first.join("\n").includes("\\x1b[31m"));
@@ -87,12 +92,184 @@ test("real Pi loader, lifecycle persistence, right overlay, scrolling, sanitizat
 	assert.deepEqual(handle.getBounds(), { row: 0, col: 60, width: 60, height: 23 });
 	assert.ok(frame[0].startsWith("conversation"));
 	assert.equal(compositor.getFocusedComponent(), component);
+	component.handleInput("]");
+	compositor.frame();
+	assert.deepEqual(handle.getBounds(), { row: 0, col: 50, width: 70, height: 23 });
+	component.handleInput("[");
+	compositor.frame();
+	assert.equal(handle.getBounds().width, 60);
 	handle.hide();
 	assert.equal(compositor.getFocusedComponent(), editor);
 	component.handleInput("\x1b");
 	assert.ok(closed);
 	await extension.commands.get("diff").handler("", { ...ctx, mode: "rpc" });
 	assert.match(notifications.at(-1)[0], /interactive terminal/);
+
+	const Panel = component.constructor;
+	const theme = { fg: (_color, text) => text };
+	const patch = [
+		'diff --git "first file.ts" "first file.ts"',
+		'--- "first file.ts"', '+++ "first file.ts"',
+		"@@ -1,4 +1,5 @@", " context", "-old-one", "-old-two", "+new-one", "+new-two", "+extra-new", " tail",
+		'diff --git "second.ts" "second.ts"',
+		"Binary files differ",
+		'diff --git "line\\nbreak\\u001b.ts"',
+		"Unable to show diff: example",
+	].join("\n");
+	const mouse = (type, x, y, width = 100, height = 49) => ({ type, button: "left", x, y, screenX: x + 20, screenY: y, width, height, shift: false, alt: false, ctrl: false });
+
+	await t.test("file accordion, selection, click targets and empty state", () => {
+		const panel = new Panel({ terminal: { rows: 50, columns: 120 }, requestRender() {} }, theme, patch, () => {});
+		let frame = panel.render(100);
+		assert.match(frame.join("\n"), /› ▶ first file.ts/);
+		assert.doesNotMatch(frame.join("\n"), /old-one|Binary files|Unable to show/);
+		panel.handleInput("\r");
+		frame = panel.render(100);
+		assert.match(frame.join("\n"), /old-one/);
+		panel.handleInput("\t");
+		panel.render(100);
+		panel.handleInput("\r");
+		frame = panel.render(100);
+		assert.match(frame.join("\n"), /› ▼ second.ts/);
+		assert.match(frame.join("\n"), /Binary files differ/);
+		assert.doesNotMatch(frame.join("\n"), /old-one/);
+		panel.handleInput("\x1b[Z");
+		frame = panel.render(100);
+		assert.match(frame.join("\n"), /› ▶ first file.ts/);
+		assert.equal(panel.handleMouse(mouse("press", 4, 2)).handled, true);
+		assert.doesNotMatch(panel.render(100).join("\n"), /old-one/);
+		panel.handleMouse(mouse("click", 4, 2));
+		frame = panel.render(100);
+		assert.match(frame.join("\n"), /old-one/);
+		const contentRow = frame.findIndex((line) => line.includes("-old-one"));
+		assert.equal(panel.handleMouse(mouse("click", 4, contentRow)), undefined);
+		panel.handleMouse(mouse("click", 4, 2));
+		frame = panel.render(100);
+		assert.doesNotMatch(frame.join("\n"), /old-one/);
+		assert.ok(frame.join("\n").includes("line\\nbreak\\u001b.ts"));
+		assert.ok(!frame.join("\n").includes("\x1b"));
+		panel.handleMouse(mouse("click", 4, 4));
+		assert.match(panel.render(100).join("\n"), /Unable to show diff: example/);
+		assert.doesNotMatch(panel.render(100).join("\n"), /old-one|Binary files differ/);
+		const empty = new Panel(tui, theme, "No uncommitted changes made since the session baseline.", () => {});
+		empty.handleInput("\t"); empty.handleInput("\r");
+		assert.match(empty.render(60).join("\n"), /No uncommitted changes/);
+	});
+
+	await t.test("split aligns replacements and preserves unmatched lines, hunks, wrapping and newline markers", () => {
+		const long = "界🙂".repeat(30);
+		const text = 'diff --git "file" "file"\n--- "file"\n+++ "file"\n@@ -1,3 +1,4 @@\n-old-one\n-old-two\n+new-one\n+new-two\n+extra-new\n context\n@@ -8 +9 @@\n-' + long + '\n\\ No newline at end of file\n+short\n\\ No newline at end of file';
+		const panel = new Panel({ terminal: { rows: 80, columns: 120 }, requestRender() {} }, theme, text, () => {});
+		panel.handleInput("\r"); panel.handleInput("v");
+		const frame = panel.render(100);
+		const output = frame.join("\n");
+		assert.match(output, /\[Split\]/);
+		assert.match(output, /Old\s+│\s+New/);
+		assert.match(output, /-old-one\s+│ \+new-one/);
+		assert.match(output, /-old-two\s+│ \+new-two/);
+		assert.match(output, /│\s+│ \+extra-new/);
+		assert.match(output, /context\s+│\s+context/);
+		assert.match(output, /@@ -8 \+9 @@/);
+		// Rejoin each column independently: long lines and their notes wrap across rows.
+		const oldText = frame.map((line) => sliceByColumn(line, 1, 47)).join("").replace(/\s/g, "");
+		const newText = frame.map((line) => sliceByColumn(line, 51, 48)).join("").replace(/\s/g, "");
+		assert.equal((oldText.match(/Nonewlineatendoffile/g) ?? []).length, 1);
+		assert.equal((newText.match(/Nonewlineatendoffile/g) ?? []).length, 1);
+		assert.equal((oldText.match(/界🙂/g) ?? []).length, 30);
+		assert.ok(frame.every((line) => visibleWidth(line) <= 100));
+		for (const width of [1, 20, 40, 79, 80, 100, 120]) {
+			const rows = panel.render(width);
+			assert.ok(rows.every((line) => visibleWidth(line) <= width));
+			if (width >= 40) assert.match(rows[1], width >= 80 ? /\[Split\]/ : /Unified/);
+		}
+		assert.match(panel.render(100)[1], /\[Split\]/, "split preference survives narrow fallback");
+		panel.handleInput("v");
+		assert.match(panel.render(100)[1], /\[Unified\]/);
+		assert.match(panel.render(100).join("\n"), /-old-one/);
+	});
+
+	await t.test("split keeps added/deleted files on the correct side and invalidation rebuilds theme colors", () => {
+		let color = "31";
+		const coloredTheme = { fg: (_color, text) => `\x1b[${color}m${text}\x1b[39m` };
+		const text = [
+			'diff --git "added" "added"', "old mode 000000", "new mode 100644", "--- /dev/null", '+++ "added"', "@@ -0,0 +1,2 @@", "+first-added", "+second-added",
+			'diff --git "deleted" "deleted"', "old mode 100644", "new mode 000000", '--- "deleted"', "+++ /dev/null", "@@ -1,2 +0,0 @@", "-first-deleted", "-second-deleted",
+		].join("\n");
+		const panel = new Panel({ terminal: { rows: 24, columns: 120 }, requestRender() {} }, coloredTheme, text, () => {});
+		panel.handleInput("\r"); panel.handleInput("v");
+		let frame = panel.render(100);
+		let output = stripTerminalSequences(frame.join("\n"));
+		assert.match(output, /old mode 000000/);
+		assert.match(output, /new mode 100644/);
+		assert.match(output, /--- \/dev\/null/);
+		assert.match(output, /│\s+│ \+first-added/);
+		assert.match(output, /│\s+│ \+second-added/);
+		panel.handleInput("\t"); panel.render(100); panel.handleInput("\r");
+		frame = panel.render(100);
+		output = stripTerminalSequences(frame.join("\n"));
+		assert.match(output, /new mode 000000/);
+		assert.match(output, /\+\+\+ \/dev\/null/);
+		assert.match(output, /-first-deleted\s+│\s+│/);
+		assert.match(output, /-second-deleted\s+│\s+│/);
+		assert.doesNotMatch(output, /first-added/);
+		assert.ok(frame.every((line) => visibleWidth(line) <= 100));
+		assert.ok(frame.join("\n").includes("\x1b[31m"));
+		color = "34";
+		panel.invalidate();
+		frame = panel.render(100);
+		assert.ok(frame.join("\n").includes("\x1b[34m"));
+		assert.ok(!frame.join("\n").includes("\x1b[31m"));
+		assert.equal(stripTerminalSequences(frame.join("\n")), output);
+	});
+
+	await t.test("keyboard selection reveals offscreen headers and clicks account for scrolling", () => {
+		const text = Array.from({ length: 30 }, (_, i) => `diff --git "file-${i}" "file-${i}"\nBinary files differ`).join("\n");
+		const panel = new Panel({ terminal: { rows: 8, columns: 120 }, requestRender() {} }, theme, text, () => {});
+		panel.render(60);
+		for (let i = 0; i < 10; i++) { panel.handleInput("\t"); panel.render(60); }
+		assert.match(panel.render(60).join("\n"), /› ▶ file-10/);
+		panel.handleMouse(mouse("click", 4, 2, 60, 7));
+		assert.match(panel.render(60).join("\n"), /› ▼ file-9/);
+		panel.handleMouse({ ...mouse("wheel", 4, 2, 60, 7), wheelDelta: 10 });
+		assert.doesNotMatch(panel.render(60).join("\n"), /› ▼ file-10/);
+	});
+
+	await t.test("real fullscreen mouse dispatch opens files, switches view and drags the mounted overlay", () => {
+		class Fullscreen extends TuiAltScreen {
+			constructor() { super({ columns: 120, rows: 24, hideCursor() {} }); this.stopped = true; }
+			doRender() {}
+			frame() { return this.compositeOverlays(Array(24).fill("conversation"), this.terminal.columns, this.terminal.rows); }
+		}
+		const screen = new Fullscreen();
+		const panel = new Panel(screen, theme, patch, () => {});
+		const opts = panel.overlayOptions();
+		const handle = screen.showOverlay(panel, opts);
+		screen.frame();
+		const click = (x, y) => {
+			screen.handleMouseEvent({ button: 0, x, y, release: false });
+			screen.handleMouseEvent({ button: 0, x, y, release: true });
+		};
+		click(64, 2);
+		assert.match(screen.frame().join("\n"), /old-one/);
+		click(78, 1);
+		assert.match(screen.frame().join("\n"), /Unified \(split needs 80 cols\)/);
+		screen.handleMouseEvent({ button: 0, x: 60, y: 8, release: false });
+		screen.handleMouseEvent({ button: 32, x: 20, y: 8, release: false });
+		screen.handleMouseEvent({ button: 0, x: 20, y: 8, release: true });
+		assert.match(screen.frame().join("\n"), /\[Split\]/);
+		assert.equal(handle.getBounds().width, 100);
+		assert.equal(handle.getBounds().col, 20);
+		assert.equal(panel.overlayOptions(), opts, "options object must stay mounted");
+		for (let i = 0; i < 10; i++) { panel.handleInput("]"); screen.frame(); }
+		assert.equal(handle.getBounds().width, 120);
+		for (let i = 0; i < 10; i++) { panel.handleInput("["); screen.frame(); }
+		assert.equal(handle.getBounds().width, 40);
+		assert.equal(handle.getBounds().col, 80);
+		screen.terminal.columns = 30;
+		assert.ok(screen.frame().every((line) => visibleWidth(line) <= 30));
+		assert.equal(handle.getBounds().width, 30);
+		handle.hide();
+	});
 });
 
 test("not a Git repository gives actionable feedback", async (t) => {

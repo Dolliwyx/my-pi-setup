@@ -45,9 +45,10 @@ export default function (pi: ExtensionAPI) {
 			}
 			try {
 				const text = await sessionDiff(baseline);
-				await ctx.ui.custom<void>((tui, theme, _keys, done) => new DiffPanel(tui, theme, text, done), {
+				let panel: DiffPanel;
+				await ctx.ui.custom<void>((tui, theme, _keys, done) => (panel = new DiffPanel(tui, theme, text, done)), {
 					overlay: true,
-					overlayOptions: { anchor: "top-right", width: "50%", minWidth: 40, maxHeight: "100%", margin: { bottom: 1 } },
+					overlayOptions: () => panel.overlayOptions(),
 				});
 			} catch (error) {
 				ctx.ui.notify(`Unable to show session diff: ${(error as Error).message}`, "error");
