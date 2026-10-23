@@ -16,6 +16,11 @@ agent/git/
 agent/npm/
 agent/skills/
 agent/extensions/herdr-agent-state.ts
+extensions/herdr-agent-state.ts
+
+# Python check artifacts
+__pycache__/
+*.pyc
 
 # Top-level Pi runtime state
 cache/

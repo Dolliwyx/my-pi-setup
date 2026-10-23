@@ -1,0 +1,47 @@
+{
+  "mode": "on",
+  "excludeRenderers": [],
+  "diffViewMode": "auto",
+  "diffIndicatorMode": "bars",
+  "diffSplitMinWidth": 120,
+  "editDiffCollapsedLines": 24,
+  "writeDiffCollapsedLines": 0,
+  "diffWordWrap": true,
+  "expandedPreviewMaxLines": 40,
+  "expandedCardBackground": "userMessageBg",
+  "expandedInputMaxLines": 5,
+  "expandedOutputMaxLines": 10,
+  "toolLabelClip": 100,
+  "useSummaryTitlesAsThinkingTitle": true,
+  "previewLines": 3,
+  "animationIntervalMs": 90,
+  "dimThinkingText": true,
+  "showStartupHeader": true,
+  "stickyUserMessage": true,
+  "enableSessionReference": true,
+  "enableSubagentAutocomplete": true,
+  "enableContextCommand": true,
+  "enableAgentSummary": true,
+  "enableWorkingMessage": true,
+  "enableAliases": true,
+  "enableCustomFooter": true,
+  "footerTokenRate": true,
+  "footerTokenRateMode": "live",
+  "footerCurrency": "PHP",
+  "footerCurrencyRate": null,
+  "footerNerdIcons": true,
+  "footerGitStatsMode": "working",
+  "footerHiddenKeys": [
+    "ponytail"
+  ],
+  "footerLine1Keys": [
+    "pi-usage"
+  ],
+  "footerLine2Keys": [
+    "mcp",
+    "ponytail",
+    "usage",
+    "gpt-config"
+  ],
+  "footerLine3Keys": []
+}

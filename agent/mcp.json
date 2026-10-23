@@ -3,14 +3,40 @@
     "shortcut": {
       "url": "https://mcp.shortcut.com/mcp",
       "headers": {
-        "Authorization": "Bearer YOUR_SHORTCUT_TOKEN"
+        "Authorization": "Bearer ${SHORTCUT_TOKEN}"
       }
+    },
+    "notion-smd": {
+      "url": "https://mcp.notion.com/mcp",
+      "enabled": false
+    },
+    "notion-dolliwyx": {
+      "url": "https://mcp.notion.com/mcp",
+      "enabled": false
+    },
+    "notion-patch": {
+      "url": "https://mcp.notion.com/mcp",
+      "enabled": false
     },
     "TeamBrain": {
       "url": "https://api.team-brain.com/mcp",
       "headers": {
-        "Authorization": "Bearer YOUR_TEAM_BRAIN_TOKEN"
+        "Authorization": "Bearer ${TEAM_BRAIN_TOKEN}"
       }
+    },
+    "playwright": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@playwright/mcp@0.0.83",
+        "--browser",
+        "chromium"
+      ],
+      "description": "Browser automation and DOM inspection with Playwright"
+    },
+    "context7": {
+      "url": "https://mcp.context7.com/mcp",
+      "description": "Up-to-date library documentation and code examples"
     }
   }
 }
