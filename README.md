@@ -1,65 +1,61 @@
 # my-pi-setup
 
-Portable snapshot of my machine's [Pi coding agent](https://pi.dev) configuration. The machine is the source of truth; credentials and runtime state are excluded.
+My personal [Pi coding agent](https://pi.dev) configuration and custom extensions. This repository keeps selected files from my local setup under version control for reference and reuse across machines.
 
-## Restore on another machine
+It is not a complete backup or an automated installer. The repository no longer includes a restore script, a snapshot manifest, or the shared skills collection.
 
-Requires Python 3.10+, Git, Node.js 22.19+ and **Pi 1.4.0** (recorded in `snapshot.json`). On a POSIX system, install that Pi version with:
+## Repository contents
 
-```sh
-npm install -g --ignore-scripts @earendil-works/pi-coding-agent@1.4.0
-git clone git@github.com:dolliwyx/my-pi-setup.git
-cd my-pi-setup
-python3 scripts/restore.py          # preview only
-python3 scripts/restore.py --apply  # copy files and recreate skill links
-pi update --extensions             # install the pinned package declarations
-```
+| Path | Contents | Local location |
+| --- | --- | --- |
+| [`agent/`](agent/) | Settings, package declarations, keybindings, model overrides, MCP configuration, and extension preferences | `~/.pi/agent/` |
+| [`agent/subagent-manager/agents/`](agent/subagent-manager/agents/) | Custom definitions for `pi-subagent-manager` | `~/.pi/agent/subagent-manager/agents/` |
+| [`extensions/`](extensions/) | Custom TypeScript extensions and session-diff tests | `~/.pi/agent/extensions/` |
+| [`home/AGENTS.md`](home/AGENTS.md) | Home-level instructions for coding agents | `~/AGENTS.md` |
+| [`.pi/skills/sync-pi-agent/`](.pi/skills/sync-pi-agent/) | A project-local skill and script for partial sync from the local Pi configuration into this repository | Project-local tooling |
 
-Close existing Pi sessions before applying. Changed destination files are backed up to a private temporary directory printed by the script; move that backup somewhere persistent if needed. The restore overwrites snapshot-owned files but never deletes unrelated files or copies credentials. **An existing machine's extra extensions, skills, agents, or instructions can still affect behavior**; review them or use a fresh profile for parity. The script refuses destination paths with symlinked parent directories. Native Windows symlink creation may need Developer Mode; WSL/Linux is the reference environment.
+The tracked file list is available with `git ls-files`.
 
-Set `SHORTCUT_TOKEN` and `TEAM_BRAIN_TOKEN` in the shell environment using your secret manager. They contain the raw tokens, without `Bearer `. Pi expands their references in `mcp.json`. Do not put their values in this repo.
+## Custom subagents
 
-Then start Pi and use `/login` for the model provider. The three Notion MCP entries retain the machine's enabled/disabled settings; when enabling them, sign in to each account separately with `/mcp login notion-smd`, `/mcp login notion-dolliwyx`, or `/mcp login notion-patch`. Use `/mcp` to inspect connection status.
+The repository contains these custom definitions:
 
-### What is restored
+- `explorer` investigates code and research questions without modifying files.
+- `general-purpose` handles research, analysis, or implementation when a specialist is unsuitable.
+- `reviewer` independently checks work for defects, regressions, security risks, and missing tests.
+- `worker` completes and verifies bounded tasks.
 
-| Repo path | Destination |
+Each definition records its model, thinking level, allowed tools, and instructions. The saved settings disable built-in subagents.
+
+## Custom extensions
+
+| Extension | Purpose |
 | --- | --- |
-| `agent/` | `~/.pi/agent/` — settings, keybindings, model overrides, sanitized MCP config, extension preferences, rules, and subagent-manager definitions |
-| `extensions/` | `~/.pi/agent/extensions/` — the machine's custom extensions, including session-diff |
-| `agents/` | `~/.pi/agent/agents/` — current legacy agent definitions |
-| `pi-agents/` | `~/.pi/agents/` — additional legacy agent definitions, kept in their original scope |
-| `skills/` | `~/.agents/skills/` — all 42 shared skills with their scripts, schemas, and other assets |
-| `home/AGENTS.md` | `~/AGENTS.md` — active home-level instructions, not a new global `~/.pi/agent/AGENTS.md` |
-| `settings.json` | `~/.pi/settings.json` — additional UI settings |
+| `clean-codeblocks.ts` | Adjusts Markdown code-block rendering |
+| `codex-quota.ts` | Displays Codex quota and credit information |
+| `minimal-tool-calls.ts` | Renders compact tool calls |
+| `moonshot-balance.ts` | Displays the Moonshot account balance |
+| `notify-done.ts` | Sends completion notifications |
+| `prompt-timer.ts` | Displays elapsed time for an agent run |
+| `reasoning-cycle.ts` | Changes the thinking level with `Alt+,` and `Alt+.` |
+| `session-diff/` | Displays uncommitted changes since a session baseline with `/diff` |
 
-The seven `~/.pi/agent/skills/` links are recreated from `snapshot.json`. Ponytail's six package-provided skills come from its pinned package, rather than another vendored copy. All declared npm packages are pinned to installed versions; Ponytail is pinned to the installed Git commit. Transitive npm dependencies and external services are not fully locked.
+Presence in this repository does not mean an extension is enabled. [`agent/settings.json`](agent/settings.json) disables several of the included extensions.
 
-### Machine-specific integrations
+The [session-diff README](extensions/session-diff/README.md) describes its scope, controls, and test commands.
 
-- Playwright MCP no longer embeds this machine's Chromium executable path. Install its matching browser on the destination with `npx -y --package=@playwright/mcp@0.0.83 playwright install chromium`. Browser system libraries may also be required.
-- Herdr itself is external to this snapshot. Its installer owns `herdr-agent-state.ts`; regenerate it through Herdr rather than copying the generated integration file.
-- `obsidian-writing` retains the source machine's vault name, Windows CLI, and `/mnt/c/Users/A/obsidian/obsidian` path. Install Obsidian and adjust that skill's target to the destination vault.
-- `tldraw-offline` retains Windows user `A` paths and references an external `~/skills/tldraw-offline/tq` helper. Install tldraw Desktop's integration and update those paths, or use the skill's raw-curl fallback.
-- Other skills may require their documented tools, Python/npm dependencies, desktop applications, or external system skills (for example image generation). Those installations and personal documents are not included.
-- Provider/model availability depends on the destination account. The preserved legacy `pi-agents/Explore.md` uses a model outside the main configured model cycle, as on the source machine.
+## Configuration limits
 
-Auth files, MCP OAuth tokens, device IDs, trust decisions, sessions, caches, usage history, and package installation directories are intentionally excluded. The `pi-usage.json` included here is a preference file (`codexFastMode`), not usage history.
+The files reflect my setup, not a general-purpose default. Package declarations are pinned in `agent/settings.json`, but dependencies, model access, and external services are not included.
 
-## Refreshing the snapshot
+The saved settings reference shared skills under `~/.agents/skills/` that this repository does not contain. MCP integrations also require separate credentials or browser setup. [`agent/mcp.json`](agent/mcp.json) references `SHORTCUT_TOKEN` and `TEAM_BRAIN_TOKEN` through environment variables rather than storing their values.
 
-Review machine changes before copying them into the matching paths above. Remove `deviceId` from settings, pin package versions to the installed versions, replace MCP secrets with environment references, and remove machine-local browser paths. Keep shared skill files and their assets together.
+Credentials, OAuth tokens, sessions, caches, package installations, and other runtime state are outside the repository's scope. [`.gitignore`](.gitignore) lists excluded paths.
 
-The older `.pi/skills/sync-pi-agent/scripts/sync.sh` is only a **partial legacy sync**: it misses shared/symlinked skills, nested extensions and several config files, and can replace pinned settings with the raw machine settings. Do not use it to refresh this portable snapshot.
+## Sync limits
 
-Before committing, inspect the complete diff for credentials and machine state. Never copy all of `~/.pi/agent` wholesale.
+The project-local sync script copies only an allowlisted subset of `~/.pi/agent` into this repository. It does not restore files to a machine or sync the whole setup.
 
-## Checks
+The script misses custom subagent-manager definitions, nested extensions, shared skills, and several configuration files. It can also recreate removed `agents/`, `skills/`, and `agent/rules/` directories and replace pinned settings with local settings. It is not a full refresh workflow for the current repository layout.
 
-```sh
-python3 -B -m unittest discover -s tests -v
-PI_TEST_PACKAGE=/path/to/node_modules/@earendil-works/pi-coding-agent \
-  node --test extensions/session-diff/*.test.mjs
-```
-
-The restore tests use temporary homes, check preview/idempotency/backups, retain existing credentials, and reject symlinked destination parents. See [session-diff](extensions/session-diff/README.md) for that extension's scope and controls.
+Changes to the saved configuration require review for secrets, machine-specific paths, external dependencies, and unintended overwrites.
