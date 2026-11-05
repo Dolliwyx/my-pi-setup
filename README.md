@@ -31,6 +31,7 @@ Each definition records its model, thinking level, allowed tools, and instructio
 
 | Extension | Purpose |
 | --- | --- |
+| [`assistant-style/`](extensions/assistant-style/) | Adds assistant reply gutters, hides assistant code fences, and compacts sent user messages; includes renderer tests |
 | `clean-codeblocks.ts` | Adjusts Markdown code-block rendering |
 | `codex-quota.ts` | Displays Codex quota and credit information |
 | `minimal-tool-calls.ts` | Renders compact tool calls |
