@@ -200,7 +200,6 @@ export default function (pi: ExtensionAPI): void {
 			disposeUser();
 			disposeAssistant();
 		};
-		ctx.ui.requestRender(true);
 	});
 	pi.on("session_shutdown", () => {
 		dispose?.();

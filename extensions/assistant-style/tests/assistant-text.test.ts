@@ -198,7 +198,7 @@ test("factory activates only in the TUI and cleans up across repeated session st
 	};
 	const tui = mock();
 	const headless = mock();
-	const ctx = { mode: "tui", hasUI: true, ui: { requestRender() {} } };
+	const ctx = { mode: "tui", hasUI: true, ui: {} };
 	const component = new AssistantMessageComponent(message([text(code("answer()"))]) as any);
 	tui.get("session_start")!({}, ctx);
 	assert.equal(dotCount(plain(component)), 1);
