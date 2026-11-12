@@ -193,7 +193,10 @@ test("saved ccstyle mode is followed without importing the package", async () =>
 test("factory activates only in the TUI and cleans up across repeated session starts", () => {
 	const mock = () => {
 		const handlers = new Map<string, (event: any, ctx: any) => void>();
-		assistantStyle({ on: (name: string, handler: any) => handlers.set(name, handler) } as any);
+		assistantStyle({
+			on: (name: string, handler: any) => handlers.set(name, handler),
+			registerToolRenderer() {},
+		} as any);
 		return handlers;
 	};
 	const tui = mock();

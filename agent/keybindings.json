@@ -1,5 +1,5 @@
 {
   "app.clipboard.pasteImage": ["alt+v", "ctrl+v"],
-  "app.model.cycleBackward": "alt+j",
-  "app.model.cycleForward": "alt+k"
+  "app.model.cycleBackward": "alt+-",
+  "app.model.cycleForward": "alt+="
 }

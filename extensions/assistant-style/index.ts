@@ -1,8 +1,8 @@
 import { readFileSync } from "node:fs";
-import { join } from "node:path";
+import { basename, dirname, join, resolve } from "node:path";
 import { stripVTControlCharacters } from "node:util";
 import { AssistantMessageComponent, UserMessageComponent, getAgentDir, type ExtensionAPI } from "@earendil-works/pi-coding-agent";
-import { Markdown, truncateToWidth, type Component } from "@earendil-works/pi-tui";
+import { Markdown, Text, truncateToWidth, type Component } from "@earendil-works/pi-tui";
 
 const ASSISTANT_TEXT_COMPONENT = Symbol.for("pi.ccstyle.assistant-text-component");
 const ASSISTANT_TEXT_RENDER_PATCH = Symbol.for("pi.ccstyle.assistant-text-render-patch");
@@ -190,10 +190,27 @@ export function createStyleEnabledReader(settingsPath = join(getAgentDir(), "pi-
 
 export default function (pi: ExtensionAPI): void {
 	let dispose: (() => void) | undefined;
+	const isEnabled = createStyleEnabledReader();
+	pi.registerToolRenderer((toolName, next) => {
+		const original = next();
+		const renderCall = original?.renderCall;
+		if (toolName !== "read" || !renderCall) return original;
+		return {
+			...original,
+			renderCall(args, theme, context) {
+				const inputPath = args?.file_path ?? args?.path;
+				const path = typeof inputPath === "string" ? inputPath.replace(/^@/, "") : undefined;
+				if (!isEnabled() || typeof path !== "string" || basename(path) !== "SKILL.md") {
+					return renderCall(args, theme, context);
+				}
+				const skill = basename(dirname(resolve(context.cwd, path))) || "SKILL.md";
+				return new Text(`${theme.fg("toolTitle", theme.bold("Skill"))} ${theme.fg("dim", `· ${skill}`)}`, 0, 0);
+			},
+		};
+	});
 	pi.on("session_start", (_event, ctx) => {
 		if (ctx.mode !== "tui" || !ctx.hasUI) return;
 		dispose?.();
-		const isEnabled = createStyleEnabledReader();
 		const disposeAssistant = installAssistantTextRendering(isEnabled);
 		const disposeUser = installUserMessageRendering(isEnabled);
 		dispose = () => {

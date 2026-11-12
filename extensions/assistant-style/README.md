@@ -1,6 +1,6 @@
 # Assistant style
 
-Local Pi extension: a `●` gutter per assistant text block, no generated assistant code-fence rows, and compact sent user-message bands with a `❯` marker and aligned continuation lines. Thinking, tool output, user Markdown, and syntax highlighting remain unchanged.
+Local Pi extension: a `●` gutter per assistant text block, no generated assistant code-fence rows, and compact sent user-message bands with a `❯` marker and aligned continuation lines. Reads of `SKILL.md` display as **Skill · skill-name**, using the containing directory name. Thinking, tool output, user Markdown, and syntax highlighting remain unchanged; tool execution and model context are unaffected.
 
 Copy this directory to `~/.pi/agent/extensions/assistant-style/`; Pi discovers `index.ts` automatically. Run `/reload` after installing or editing it. The extension follows the saved `mode: "off"` in `pi-cc-extensions.json`; it works independently when that package is absent.
 

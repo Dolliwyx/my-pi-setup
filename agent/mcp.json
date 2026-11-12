@@ -3,8 +3,9 @@
     "shortcut": {
       "url": "https://mcp.shortcut.com/mcp",
       "headers": {
-        "Authorization": "Bearer ${SHORTCUT_TOKEN}"
-      }
+        "Authorization": "Bearer API_TOKEN"
+      },
+      "enabled": false
     },
     "notion-smd": {
       "url": "https://mcp.notion.com/mcp",
@@ -21,22 +22,26 @@
     "TeamBrain": {
       "url": "https://api.team-brain.com/mcp",
       "headers": {
-        "Authorization": "Bearer ${TEAM_BRAIN_TOKEN}"
-      }
+        "Authorization": "Bearer API_TOKEN"
+      },
+      "enabled": false
     },
     "playwright": {
       "command": "npx",
       "args": [
         "-y",
         "@playwright/mcp@0.0.83",
-        "--browser",
-        "chromium"
+        "--executable-path",
+        "/home/dolliwyx/.cache/ms-playwright/chromium-1247/chrome-linux64/chrome"
       ],
       "description": "Browser automation and DOM inspection with Playwright"
     },
     "context7": {
       "url": "https://mcp.context7.com/mcp",
       "description": "Up-to-date library documentation and code examples"
+    },
+    "executor": {
+      "url": "https://mcp.executor.sh/mcp"
     }
   }
 }

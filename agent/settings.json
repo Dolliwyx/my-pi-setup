@@ -1,19 +1,20 @@
 {
-  "lastChangelogVersion": "1.4.0",
+  "lastChangelogVersion": "1.5.2",
   "enableInstallTelemetry": false,
   "packages": [
-    "npm:@juicesharp/rpiv-ask-user-question@2.14.0",
-    "npm:@juicesharp/rpiv-btw@2.14.0",
-    "npm:pi-web-access@0.44.0",
-    "npm:@plannotator/pi-extension@0.28.29",
-    "npm:@ff-labs/pi-fff@0.11.0",
-    "npm:@tintinweb/pi-tasks@0.9.1",
-    "npm:cc-safety-net@2.6.18",
-    "npm:@ogulcancelik/pi-herdr@0.4.1",
-    "git:github.com/DietrichGebert/ponytail@09c434ab73ca43761c5d8b0c5d341926c2fba710",
-    "npm:pi-cc-extensions@1.0.10",
-    "npm:@narumitw/pi-usage@0.68.0",
-    "npm:pi-subagent-manager@1.1.0"
+    "npm:@juicesharp/rpiv-ask-user-question",
+    "npm:@juicesharp/rpiv-btw",
+    "npm:pi-web-access",
+    "npm:@plannotator/pi-extension",
+    "npm:@ff-labs/pi-fff",
+    "npm:@tintinweb/pi-tasks",
+    "npm:cc-safety-net",
+    "npm:@ogulcancelik/pi-herdr",
+    "git:github.com/DietrichGebert/ponytail",
+    "npm:@narumitw/pi-usage",
+    "npm:@zigai/pi-mention-skill",
+    "npm:@tintinweb/pi-subagents",
+    "npm:pi-cc-extensions"
   ],
   "defaultProvider": "openai-codex",
   "defaultModel": "gpt-6.1-sol",
@@ -21,9 +22,10 @@
   "hideThinkingBlock": false,
   "quietStartup": true,
   "enabledModels": [
-    "openai-codex/gpt-6-astra",
+    "openai-codex/gpt-6-luna",
+    "openai-codex/gpt-6.1-terra",
     "openai-codex/gpt-6.1-sol",
-    "openai-codex/gpt-6-luna"
+    "openai-codex/gpt-6-astra"
   ],
   "editorPaddingX": 2,
   "collapseChangelog": false,

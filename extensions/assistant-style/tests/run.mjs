@@ -16,6 +16,7 @@ for (const name of ["pi-coding-agent", "pi-tui", "pi-ai", "pi-agent-core"]) {
 const jiti = createJiti(import.meta.url, { fsCache: false, alias });
 await jiti.import(join(import.meta.dirname, "assistant-text.test.ts"));
 await jiti.import(join(import.meta.dirname, "user-message.test.ts"));
+await jiti.import(join(import.meta.dirname, "skill-read.test.ts"));
 if (existsSync(ccPackage)) {
 	await jiti.import(join(import.meta.dirname, "pi-cc-extensions.test.ts"));
 } else {
